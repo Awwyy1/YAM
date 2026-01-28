@@ -1062,7 +1062,48 @@ const App = () => {
                 <motion.button whileHover={{ scale: 1.05 }} onClick={() => setCurrentPage('brand')} className="bg-[#FF3B30] text-white px-12 py-5 rounded-full text-sm font-black tracking-widest uppercase shadow-xl">{t.hero.cta}</motion.button>
                 <div className="mt-28 w-full max-w-5xl aspect-video rounded-[40px] overflow-hidden shadow-2xl"><img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=2000&auto=format&fit=crop" className="w-full h-full object-cover" alt="Coffee" /></div>
               </section>
-              
+
+              <section className="w-full overflow-hidden bg-[#FF3B30] py-5 -rotate-1 scale-[1.02]">
+                <div className="flex animate-marquee whitespace-nowrap">
+                  {[...Array(2)].map((_, loop) => (
+                    <div key={loop} className="flex items-center shrink-0">
+                      {(lang === 'en' ? [
+                        { text: "ORGANIC SOIL", style: "font-black" },
+                        { text: "daily roast", style: "italic font-light" },
+                        { text: "FAIR TRADE", style: "font-black tracking-[0.3em]" },
+                        { text: "slow mornings", style: "italic font-light" },
+                        { text: "NO SHORTCUTS", style: "font-black" },
+                        { text: "craft over hype", style: "italic font-light" },
+                        { text: "BATUMI", style: "font-black tracking-[0.3em]" },
+                        { text: "good beans only", style: "italic font-light" },
+                        { text: "EST. 2026", style: "font-black" },
+                        { text: "sip the vibe", style: "italic font-light" },
+                      ] : [
+                        { text: "ორგანული ნიადაგი", style: "font-black" },
+                        { text: "ყოველდღიური მოხალვა", style: "italic font-light" },
+                        { text: "სამართლიანი ვაჭრობა", style: "font-black tracking-[0.2em]" },
+                        { text: "მშვიდი დილა", style: "italic font-light" },
+                        { text: "კომპრომისის გარეშე", style: "font-black" },
+                        { text: "ხელობა, არა ჰაიპი", style: "italic font-light" },
+                        { text: "ბათუმი", style: "font-black tracking-[0.2em]" },
+                        { text: "მხოლოდ კარგი მარცვალი", style: "italic font-light" },
+                        { text: "2026 წლიდან", style: "font-black" },
+                        { text: "იგრძენი ვაიბი", style: "italic font-light" },
+                      ]).map((item, i) => (
+                        <span key={`${loop}-${i}`} className={`text-white text-lg md:text-2xl mx-6 ${item.style}`}>
+                          {item.text}
+                          <span className="mx-6 text-white/40 font-normal not-italic">&#x2022;</span>
+                        </span>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+                <style>{`
+                  @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+                  .animate-marquee { animation: marquee 30s linear infinite; display: flex; }
+                `}</style>
+              </section>
+
               <section className="py-24 px-6 md:px-12 max-w-4xl mx-auto">
                 <h3 className="text-4xl md:text-5xl font-black italic mb-16 uppercase font-en tracking-tighter">
                   {t.home.todays_brew}
