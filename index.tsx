@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, X, Instagram, Sun, Moon, Leaf, Coffee, Globe, ArrowUpRight, MapPin, Clock, Trash2, Gamepad2, Share2, Lock, Trophy, AlertCircle, Bomb, Type, Palette, Layout, Grid, Check, Sparkles, Eye } from 'lucide-react';
+import { ShoppingCart, X, Instagram, Sun, Moon, Leaf, Coffee, Globe, ArrowUpRight, MapPin, Clock, Trash2, Gamepad2, Share2, Lock, Trophy, AlertCircle, Bomb, Type, Palette, Layout, Grid, Check, Sparkles, Eye, Camera, MessageSquare, Heart } from 'lucide-react';
 
 const COLORS = {
   light: {
@@ -162,6 +162,32 @@ const CONTENT = {
             fonts: [
                 { family: "Outfit", style: "Bold / Black", usage: "Headlines (EN)" },
                 { family: "Noto Sans Geo", style: "Bold / 900", usage: "Headlines (GE)" }
+            ],
+            values_title: "Brand Values",
+            values_desc: "Four pillars that define every decision we make—from sourcing to serving.",
+            values: [
+                { title: "Organic", desc: "No shortcuts. Chemical-free from soil to cup. We believe purity is the ultimate luxury.", num: "01" },
+                { title: "Craft", desc: "Small-batch obsession. Every roast is a conscious act, not an assembly line.", num: "02" },
+                { title: "Minimal", desc: "Strip away the noise. What remains is essential, intentional, and honest.", num: "03" },
+                { title: "Community", desc: "Coffee is a ritual shared. We build spaces where strangers become regulars.", num: "04" },
+            ],
+            moodboard_title: "Visual Language",
+            moodboard_desc: "The sensory world of YAM. Raw textures, warm tones, deliberate stillness.",
+            photo_title: "Photography",
+            photo_desc: "Our visual rules. Every image must feel like a quiet morning—focused, warm, unhurried.",
+            photo_rules: [
+                { label: "High Contrast", desc: "Deep shadows, bright highlights. No flat midtones." },
+                { label: "Natural Light", desc: "Always. No studio flash. Golden hour preferred." },
+                { label: "Minimal Props", desc: "The subject is the hero. Remove everything else." },
+            ],
+            voice_title: "Brand Voice",
+            voice_desc: "How YAM speaks. Confident but never loud. Direct but never cold.",
+            voice_do: "We say",
+            voice_dont: "Never",
+            voice_examples: [
+                { yes: "Crafted daily.", no: "Made fresh every day!" },
+                { yes: "Sourced with intent.", no: "We care about our farmers!!" },
+                { yes: "Less. Better.", no: "We offer the best quality at great prices!" },
             ]
         },
         cart: {
@@ -306,6 +332,32 @@ const CONTENT = {
             dos: "კი",
             donts: "არა",
             usage: "იკონოგრაფია",
+            values_title: "ბრენდის ღირებულებები",
+            values_desc: "ოთხი საყრდენი, რომელიც ყველა გადაწყვეტილებას განსაზღვრავს — მოპოვებიდან მიწოდებამდე.",
+            values: [
+                { title: "ორგანული", desc: "არანაირი კომპრომისი. ქიმიკატების გარეშე, ნიადაგიდან ჭიქამდე.", num: "01" },
+                { title: "ხელობა", desc: "მცირე პარტიების ობსესია. ყოველი მოხალვა შეგნებული აქტია.", num: "02" },
+                { title: "მინიმალიზმი", desc: "მოაშორე ხმაური. რაც რჩება — არსებითია, მიზანმიმართული და გულწრფელი.", num: "03" },
+                { title: "საზოგადოება", desc: "ყავა გაზიარებული რიტუალია. ვქმნით სივრცეებს, სადაც უცნობები მუდმივ სტუმრებად იქცევიან.", num: "04" },
+            ],
+            moodboard_title: "ვიზუალური ენა",
+            moodboard_desc: "YAM-ის სენსორული სამყარო. ნედლი ტექსტურები, თბილი ტონები, მიზანმიმართული სიმშვიდე.",
+            photo_title: "ფოტოგრაფია",
+            photo_desc: "ჩვენი ვიზუალური წესები. ყოველი სურათი მშვიდი დილის შეგრძნებას უნდა იწვევდეს.",
+            photo_rules: [
+                { label: "მაღალი კონტრასტი", desc: "ღრმა ჩრდილები, კაშკაშა აქცენტები." },
+                { label: "ბუნებრივი შუქი", desc: "ყოველთვის. სტუდიური ფლეში არ გამოიყენება." },
+                { label: "მინიმალური რეკვიზიტი", desc: "სუბიექტი არის გმირი. ყველაფერი ზედმეტი მოაშორე." },
+            ],
+            voice_title: "ბრენდის ხმა",
+            voice_desc: "როგორ ლაპარაკობს YAM. თავდაჯერებულად, მაგრამ არასდროს ხმამაღლა.",
+            voice_do: "ჩვენ ვამბობთ",
+            voice_dont: "არასდროს",
+            voice_examples: [
+                { yes: "იქმნება ყოველდღე.", no: "ყოველდღე ახალს ვამზადებთ!" },
+                { yes: "მიზნობრივად მოპოვებული.", no: "ჩვენ ფერმერებზე ვზრუნავთ!!" },
+                { yes: "ნაკლები. უკეთესი.", no: "საუკეთესო ხარისხი საუკეთესო ფასად!" },
+            ],
             colors: [
                 { name: "Blaze Orange", hex: "#FF3B30", role: "მთავარი აქცენტი / ენერგია" },
                 { name: "Alabaster", hex: "#F4F4F2", role: "ბაზა / ორგანული" },
@@ -652,6 +704,95 @@ const LogoPage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) =
                     </div>
                 </div>
             </div>
+
+            {/* Brand Values */}
+            <div className="mb-40">
+                <h3 className="text-3xl font-black uppercase mb-6 flex items-center gap-4 border-b border-current/10 pb-6">
+                    <Heart className="text-[#FF3B30]" size={28} /> {t.values_title}
+                </h3>
+                <p className="text-xl opacity-60 max-w-2xl mb-16">{t.values_desc}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {t.values.map((v, i) => (
+                        <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="relative p-10 rounded-[30px] border border-current/5 overflow-hidden group hover:border-[#FF3B30]/20 transition-colors">
+                            <span className="absolute top-8 right-8 text-7xl font-black opacity-[0.04] leading-none select-none">{v.num}</span>
+                            <span className="text-[#FF3B30] text-xs font-black tracking-[0.3em] uppercase mb-4 block">{v.num}</span>
+                            <h4 className="text-3xl font-black uppercase mb-3 tracking-tight">{v.title}</h4>
+                            <p className="opacity-50 leading-relaxed text-lg">{v.desc}</p>
+                        </motion.div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Moodboard */}
+            <div className="mb-40">
+                <h3 className="text-3xl font-black uppercase mb-6 flex items-center gap-4 border-b border-current/10 pb-6">
+                    <Eye className="text-[#FF3B30]" size={28} /> {t.moodboard_title}
+                </h3>
+                <p className="text-xl opacity-60 max-w-2xl mb-16">{t.moodboard_desc}</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                        { src: "https://images.unsplash.com/photo-1442512595331-e89e73853f31?q=80&w=800&auto=format&fit=crop", span: "row-span-2" },
+                        { src: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=800&auto=format&fit=crop", span: "" },
+                        { src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop", span: "" },
+                        { src: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?q=80&w=800&auto=format&fit=crop", span: "" },
+                        { src: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefda?q=80&w=800&auto=format&fit=crop", span: "col-span-2 md:col-span-1" },
+                        { src: "https://images.unsplash.com/photo-1447078806655-40579c2520d6?q=80&w=800&auto=format&fit=crop", span: "hidden md:block" },
+                    ].map((img, i) => (
+                        <motion.div key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className={`overflow-hidden rounded-2xl ${img.span}`}>
+                            <img src={img.src} alt="" className="w-full h-full object-cover aspect-square grayscale hover:grayscale-0 transition-all duration-700" />
+                        </motion.div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Photography Style */}
+            <div className="mb-40">
+                <h3 className="text-3xl font-black uppercase mb-6 flex items-center gap-4 border-b border-current/10 pb-6">
+                    <Camera className="text-[#FF3B30]" size={28} /> {t.photo_title}
+                </h3>
+                <p className="text-xl opacity-60 max-w-2xl mb-16">{t.photo_desc}</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {t.photo_rules.map((rule, i) => {
+                        const photos = [
+                            "https://images.unsplash.com/photo-1511920170033-f8396924c348?q=80&w=800&auto=format&fit=crop",
+                            "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=800&auto=format&fit=crop",
+                            "https://images.unsplash.com/photo-1459755486867-b55449bb39ff?q=80&w=800&auto=format&fit=crop",
+                        ];
+                        return (
+                            <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }}>
+                                <div className="aspect-[4/5] rounded-[30px] overflow-hidden mb-6">
+                                    <img src={photos[i]} alt="" className="w-full h-full object-cover" />
+                                </div>
+                                <h4 className="text-xl font-black uppercase mb-2">{rule.label}</h4>
+                                <p className="opacity-50 text-sm leading-relaxed">{rule.desc}</p>
+                            </motion.div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Brand Voice */}
+            <div className="mb-40">
+                <h3 className="text-3xl font-black uppercase mb-6 flex items-center gap-4 border-b border-current/10 pb-6">
+                    <MessageSquare className="text-[#FF3B30]" size={28} /> {t.voice_title}
+                </h3>
+                <p className="text-xl opacity-60 max-w-2xl mb-16">{t.voice_desc}</p>
+                <div className="space-y-6">
+                    {t.voice_examples.map((ex, i) => (
+                        <motion.div key={i} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="p-8 rounded-[20px] bg-green-500/5 border border-green-500/20">
+                                <span className="text-green-500 text-[10px] font-black tracking-[0.3em] uppercase flex items-center gap-2 mb-4"><Check size={12} /> {t.voice_do}</span>
+                                <p className="text-2xl font-black uppercase tracking-tight">{ex.yes}</p>
+                            </div>
+                            <div className="p-8 rounded-[20px] bg-red-500/5 border border-red-500/20">
+                                <span className="text-red-500 text-[10px] font-black tracking-[0.3em] uppercase flex items-center gap-2 mb-4"><X size={12} /> {t.voice_dont}</span>
+                                <p className="text-2xl font-black uppercase tracking-tight opacity-40 line-through">{ex.no}</p>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+            </div>
+
         </motion.div>
     );
 };
