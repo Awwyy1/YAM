@@ -408,14 +408,14 @@ const FULL_MENU_CATEGORIES = {
 
 const MERCH_ITEMS = {
     en: [
-        { id: 101, name: "YAM ARCHIVE TEE", color: "BLAZE ORANGE", price: "₾45.00", img: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?q=80&w=1000&auto=format&fit=crop", desc: "Heavyweight cotton with puff print logo." },
-        { id: 102, name: "ABSTRACT NOIR", color: "MIDNIGHT BLACK", price: "₾50.00", img: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=1000&auto=format&fit=crop", desc: "Oversized fit. Back abstract tonal print." },
+        { id: 101, name: "YAM ARCHIVE TEE", color: "BLAZE ORANGE", price: "₾45.00", img: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?q=80&w=1000&auto=format&fit=crop", desc: "Heavyweight cotton with puff print logo.", comingSoon: true },
+        { id: 102, name: "ABSTRACT NOIR", color: "MIDNIGHT BLACK", price: "₾50.00", img: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=1000&auto=format&fit=crop", desc: "Oversized fit. Back abstract tonal print.", comingSoon: true },
         { id: 103, name: "YAM HOODIE", color: "VOID", price: "₾85.00", img: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=1000&auto=format&fit=crop", comingSoon: true },
         { id: 104, name: "CANVAS TOTE", color: "RAW", price: "₾25.00", img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=1000&auto=format&fit=crop", comingSoon: true }
     ],
     ge: [
-        { id: 101, name: "YAM არქივ TEE", color: "მკვეთრი ნარინჯისფერი", price: "₾45.00", img: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?q=80&w=1000&auto=format&fit=crop", desc: "მძიმე ბამბა, მოცულობითი ლოგო." },
-        { id: 102, name: "აბსტრაქტ ნუარი", color: "შუაღამის შავი", price: "₾50.00", img: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=1000&auto=format&fit=crop", desc: "ოვერსაიზ სტილი. აბსტრაქტული პრინტი ზურგზე." },
+        { id: 101, name: "YAM არქივ TEE", color: "მკვეთრი ნარინჯისფერი", price: "₾45.00", img: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?q=80&w=1000&auto=format&fit=crop", desc: "მძიმე ბამბა, მოცულობითი ლოგო.", comingSoon: true },
+        { id: 102, name: "აბსტრაქტ ნუარი", color: "შუაღამის შავი", price: "₾50.00", img: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=1000&auto=format&fit=crop", desc: "ოვერსაიზ სტილი. აბსტრაქტული პრინტი ზურგზე.", comingSoon: true },
         { id: 103, name: "YAM ჰუდი", color: "VOID", price: "₾85.00", img: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=1000&auto=format&fit=crop", comingSoon: true },
         { id: 104, name: "ტილოს ჩანთა", color: "RAW", price: "₾25.00", img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=1000&auto=format&fit=crop", comingSoon: true }
     ]
@@ -524,7 +524,7 @@ const ShopPage: React.FC<{ isDark: boolean; addToCart: (item: Product) => void; 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-40 pb-20 px-6 md:px-12">
             <div className="max-w-[90rem] mx-auto">
-                 <div className="mb-24 flex flex-col md:flex-row justify-between items-end gap-10">
+                 <div className="mb-24 flex flex-col md:flex-row justify-between items-start md:items-end gap-10">
                     <div>
                         <span className="text-[#FF3B30] font-bold tracking-widest text-sm uppercase mb-4 block">{t.label}</span>
                         <h2 className="text-6xl md:text-9xl font-black tracking-tighter uppercase leading-[0.85]">{t.title_1} <br/> {t.title_2} <span className="text-[#FF3B30]">{t.title_accent}</span></h2>
@@ -897,14 +897,14 @@ const App = () => {
           <button onClick={() => setLang(l => l === 'en' ? 'ge' : 'en')} className="text-xs font-black tracking-widest uppercase border border-current px-2 py-0.5 rounded hover:bg-[#FF3B30] hover:text-white hover:border-[#FF3B30] transition-all">
             {lang === 'en' ? 'GE' : 'EN'}
           </button>
-          <button onClick={() => setIsDark(!isDark)} className={`w-12 h-6 rounded-full relative transition-colors p-1 ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}><motion.div animate={{ x: isDark ? 24 : 0 }} className={`w-4 h-4 rounded-full flex items-center justify-center ${isDark ? 'bg-white text-black' : 'bg-white shadow-sm'}`}>{isDark ? <Moon size={10} /> : <Sun size={10} />}</motion.div></button>
+          <button onClick={() => setIsDark(!isDark)} className="opacity-70 hover:opacity-100 transition-opacity">{isDark ? <Sun size={18} /> : <Moon size={18} />}</button>
           {currentPage === 'shop' && cartItems.length > 0 && <div onClick={() => setIsCartOpen(true)} className="relative cursor-pointer"><ShoppingCart size={20} /><span className="absolute -top-2 -right-2 bg-[#FF3B30] text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{cartItems.length}</span></div>}
         </div>
       </nav>
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} items={cartItems} onRemove={(idx) => setCartItems(prev => prev.filter((_, i) => i !== idx))} isDark={isDark} lang={lang} />
       <AnimatePresence>
         {isMenuOpen && (
-          <><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsMenuOpen(false)} className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60]" /><motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} className="fixed top-0 left-0 h-full w-full max-w-sm z-[70] p-12 flex flex-col" style={{ backgroundColor: theme.base }}><button onClick={() => setIsMenuOpen(false)} className="self-end mb-16 p-2"><X size={28} /></button><div className="flex flex-col gap-6">
+          <><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} onClick={() => setIsMenuOpen(false)} className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60]" /><motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'tween', duration: 0.5, ease: [0.32, 0.72, 0, 1] }} className="fixed top-0 left-0 h-full w-full max-w-sm z-[70] p-12 flex flex-col" style={{ backgroundColor: theme.base }}><button onClick={() => setIsMenuOpen(false)} className="self-end mb-16 p-2"><X size={28} /></button><div className="flex flex-col gap-6">
             {[ { name: t.nav.home, id: 'home' }, { name: t.nav.brand, id: 'brand' }, { name: t.nav.menu, id: 'menu' }, { name: t.nav.shop, id: 'shop' }, { name: t.nav.game, id: 'game' }, { name: t.nav.oracle, id: 'oracle' }, { name: t.nav.logo, id: 'logo' } ].map((item) => (
                 <button key={item.id} onClick={() => { setCurrentPage(item.id as any); setIsMenuOpen(false); }} className={`text-5xl font-black text-left hover:text-[#FF3B30] transition-all tracking-tighter ${currentPage === item.id ? 'text-[#FF3B30]' : ''}`}>{item.name}</button>
             ))}
@@ -931,7 +931,7 @@ const App = () => {
                     <motion.div 
                         key={idx}
                         onClick={() => setActiveDrink(idx)}
-                        className={`flex justify-between items-start pb-6 border-b border-current/10 cursor-pointer transition-all duration-300 ${activeDrink === idx ? 'text-[#FF3B30] drop-shadow-[0_0_15px_rgba(255,59,48,0.4)] scale-[1.02]' : 'hover:text-[#FF3B30]'}`}
+                        className={`flex justify-between items-start pb-6 border-b border-current/10 cursor-pointer transition-colors duration-300 ${activeDrink === idx ? 'text-[#FF3B30]' : 'hover:text-[#FF3B30]'}`}
                     >
                       <div className="flex flex-col gap-1 text-left">
                         <span className="text-3xl md:text-4xl font-black uppercase leading-none">{item.name}</span>
