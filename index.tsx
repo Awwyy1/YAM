@@ -1116,7 +1116,7 @@ const App = () => {
                         className={`flex justify-between items-start pb-6 border-b border-current/10 cursor-pointer transition-colors duration-300 ${activeDrink === idx ? 'text-[#FF3B30]' : 'hover:text-[#FF3B30]'}`}
                     >
                       <div className="flex flex-col gap-1 text-left">
-                        <span className="text-[1.7rem] md:text-[2rem] font-black uppercase leading-none">{item.name}</span>
+                        <span className="text-[1.45rem] md:text-[2rem] font-black uppercase leading-none">{item.name}</span>
                         <span className="text-sm font-medium opacity-50">{item.desc}</span>
                       </div>
                       <PriceDisplay price={item.price} className="text-[1.35rem] md:text-[1.7rem] font-black" />
