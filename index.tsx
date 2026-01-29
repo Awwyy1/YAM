@@ -120,7 +120,7 @@ const CONTENT = {
             label: "YAM ORACLE",
             title_1: "DIGITAL",
             title_accent: "FATE.",
-            desc: "The ancient tradition of tassology, digitized. Sip the pixels, reveal your path.",
+            desc: "Read your coffee grounds and get a fortune told.",
             btn_sip: "TAKE A SIP",
             btn_reading: "READING GROUNDS...",
             btn_retry: "CONSULT AGAIN",
@@ -298,7 +298,7 @@ const CONTENT = {
             label: "YAM ორაკული",
             title_1: "ციფრული",
             title_accent: "ბედი.",
-            desc: "ყავაზე მკითხაობის უძველესი ტრადიცია, გაციფრულებული. მოსვი პიქსელები, გაიგე მომავალი.",
+            desc: "იმკითხავე ყავის ნალექზე და მიიღე წინასწარმეტყველება.",
             btn_sip: "მოსვი ყავა",
             btn_reading: "ვიკვლევ ნალექს...",
             btn_retry: "თავიდან",
@@ -907,14 +907,13 @@ const OraclePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang })
     }, [state]);
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-40 pb-20 px-6 md:px-12 max-w-7xl mx-auto flex flex-col items-center">
-            <div className="text-center mb-12">
-                <span className="text-[#FF3B30] font-bold tracking-widest text-sm uppercase mb-4 block flex items-center justify-center gap-2"><Sparkles size={16} /> {t.label}</span>
-                <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase mb-6">{t.title_1} <span className="text-[#FF3B30]">{t.title_accent}</span></h2>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-28 pb-12 px-6 md:px-12 max-w-7xl mx-auto flex flex-col items-center">
+            <div className="text-center mb-6">
+                <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase mb-4">{t.title_1} <span className="text-[#FF3B30]">{t.title_accent}</span></h2>
                 <p className="text-xl opacity-60 max-w-lg mx-auto">{t.desc}</p>
             </div>
 
-            <div className="relative w-80 h-80 md:w-96 md:h-96 mb-12 flex items-center justify-center select-none">
+            <div className="relative w-64 h-64 md:w-[19rem] md:h-[19rem] mb-8 flex items-center justify-center select-none">
                 {/* Outer Rim */}
                 <div className="absolute inset-0 rounded-full border-[12px] border-zinc-200 dark:border-zinc-800 shadow-2xl z-10"></div>
                 
@@ -970,7 +969,7 @@ const OraclePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang })
                 </div>
             </div>
 
-            <div className="h-24 flex items-center justify-center mb-8">
+            <div className="h-20 flex items-center justify-center mb-4">
                 <AnimatePresence mode="wait">
                     {state === 'ready' && (
                          <motion.div key="instr" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="text-center">
