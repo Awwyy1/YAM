@@ -1113,14 +1113,14 @@ const App = () => {
                 <h3 className="text-4xl md:text-5xl font-black italic mb-16 uppercase font-en tracking-tighter">
                   {t.home.todays_brew}
                 </h3>
-                <div className="flex flex-col gap-8">
+                <div className="flex flex-col gap-4">
                   {COFFEE_MENU_DATA[lang].map((item, idx) => (
                     <motion.div 
                         key={idx}
                         onClick={() => setActiveDrink(idx)}
-                        className={`flex justify-between items-start pb-6 border-b border-current/10 cursor-pointer transition-colors duration-300 ${activeDrink === idx ? 'text-[#FF3B30]' : 'hover:text-[#FF3B30]'}`}
+                        className={`flex justify-between items-start pb-3 border-b border-current/10 cursor-pointer transition-colors duration-300 ${activeDrink === idx ? 'text-[#FF3B30]' : 'hover:text-[#FF3B30]'}`}
                     >
-                      <div className="flex flex-col gap-1 text-left w-full">
+                      <div className="flex flex-col gap-0 text-left w-full">
                         <div className="flex justify-between items-baseline">
                           <span className="text-[1.45rem] md:text-[2rem] font-black uppercase leading-none">{item.name}</span>
                           <PriceDisplay price={item.price} className="text-[1.35rem] md:text-[1.7rem] font-black" />
