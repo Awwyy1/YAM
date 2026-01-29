@@ -198,7 +198,7 @@ const CONTENT = {
             one_size: "One Size"
         },
         footer: {
-            rights: "© 2026 YAM COFFEE GROUP. ALL RIGHTS RESERVED."
+            rights: "© 2026 YAM COFFEE. ALL RIGHTS RESERVED."
         }
     },
     ge: {
@@ -376,7 +376,7 @@ const CONTENT = {
             one_size: "ერთი ზომა"
         },
         footer: {
-            rights: "© 2026 YAM COFFEE GROUP. ყველა უფლება დაცულია."
+            rights: "© 2026 YAM COFFEE. ყველა უფლება დაცულია."
         }
     }
 };
