@@ -978,17 +978,18 @@ const OraclePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang })
                     )}
                     {state === 'revealed' && (
                         <motion.div key="pred" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center max-w-lg">
-                             <h3 className="text-lg md:text-xl font-black uppercase leading-tight text-[#FF3B30]">"{prediction}"</h3>
+                             <h3 className="text-base md:text-lg font-black uppercase leading-tight text-[#FF3B30]">"{prediction}"</h3>
                         </motion.div>
                     )}
                 </AnimatePresence>
             </div>
 
-            <button 
-                onClick={handleAction} 
+            <button
+                onClick={handleAction}
                 disabled={state === 'sipping' || state === 'reading'}
+                style={{ width: 'fit-content', whiteSpace: 'nowrap' }}
                 className={`
-                    w-fit px-12 py-4 rounded-full text-sm md:text-base font-black tracking-widest uppercase shadow-lg transition-all whitespace-nowrap
+                    px-12 py-4 rounded-full text-sm md:text-base font-black tracking-widest uppercase shadow-lg transition-all
                     ${state === 'sipping' || state === 'reading' ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 cursor-wait' : 'bg-[#FF3B30] text-white hover:scale-105'}
                 `}
             >
