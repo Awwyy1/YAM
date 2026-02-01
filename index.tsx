@@ -38,7 +38,7 @@ const CONTENT = {
             title_1: "GOOD",
             title_2: "MORNINGS",
             title_3: "START WITH",
-            cta: "EXPLORE THE TASTE",
+            cta: "TODAY'S BREW",
             marquee: "Organic Soil • Daily Roast • Fair Trade •"
         },
         home: {
@@ -216,7 +216,7 @@ const CONTENT = {
             title_1: "კარგი",
             title_2: "დილა იწყება",
             title_3: "YAM-ით",
-            cta: "გაუსინჯე გემო",
+            cta: "დღის ყავა",
             marquee: "ორგანული ნიადაგი • ყოველდღიური მოხალვა • სამართლიანი ვაჭრობა •"
         },
         home: {
@@ -969,7 +969,7 @@ const OraclePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang })
                 </div>
             </div>
 
-            <div className="h-20 flex items-center justify-center mb-4">
+            <div className="h-16 flex items-center justify-center mb-2">
                 <AnimatePresence mode="wait">
                     {state === 'ready' && (
                          <motion.div key="instr" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="text-center">
@@ -988,7 +988,7 @@ const OraclePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang })
                 onClick={handleAction} 
                 disabled={state === 'sipping' || state === 'reading'}
                 className={`
-                    px-12 py-6 rounded-full text-xl font-black tracking-widest uppercase shadow-lg transition-all
+                    px-12 py-4 rounded-full text-xl font-black tracking-widest uppercase shadow-lg transition-all
                     ${state === 'sipping' || state === 'reading' ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 cursor-wait' : 'bg-[#FF3B30] text-white hover:scale-105'}
                 `}
             >
@@ -1033,6 +1033,7 @@ const App = () => {
   const [activeDrink, setActiveDrink] = useState<number | null>(null);
   const theme = isDark ? COLORS.dark : COLORS.light;
   const t = CONTENT[lang];
+  useEffect(() => { window.scrollTo(0, 0); }, [currentPage]);
   return (
     <div className={`min-h-screen transition-colors duration-500 selection:bg-[#FF3B30] selection:text-white ${isDark ? 'dark' : ''} ${lang === 'en' ? 'font-en' : 'font-ge'}`} style={{ backgroundColor: theme.base, color: theme.text }}>
       <nav className="fixed top-0 left-0 w-full z-50 px-6 py-6 md:px-12 flex items-center justify-between backdrop-blur-sm">
@@ -1049,7 +1050,7 @@ const App = () => {
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} items={cartItems} onRemove={(idx) => setCartItems(prev => prev.filter((_, i) => i !== idx))} isDark={isDark} lang={lang} />
       <AnimatePresence>
         {isMenuOpen && (
-          <><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} onClick={() => setIsMenuOpen(false)} className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60]" /><motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'tween', duration: 0.5, ease: [0.32, 0.72, 0, 1] }} className="fixed top-0 left-0 h-full w-full max-w-sm z-[70] p-12 flex flex-col" style={{ backgroundColor: theme.base }}><button onClick={() => setIsMenuOpen(false)} className="self-end mb-6 p-2"><X size={28} /></button><div className="flex flex-col gap-2">
+          <><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} onClick={() => setIsMenuOpen(false)} className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60]" /><motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'tween', duration: 0.55, ease: [0.32, 0.72, 0, 1] }} className="fixed top-0 left-0 h-full w-full max-w-sm z-[70] p-12 flex flex-col" style={{ backgroundColor: theme.base }}><button onClick={() => setIsMenuOpen(false)} className="self-end mb-6 p-2"><X size={28} /></button><div className="flex flex-col gap-2">
             {[ { name: t.nav.home, id: 'home' }, { name: t.nav.brand, id: 'brand' }, { name: t.nav.menu, id: 'menu' }, { name: t.nav.shop, id: 'shop' }, { name: t.nav.game, id: 'game' }, { name: t.nav.oracle, id: 'oracle' }, { name: t.nav.logo, id: 'logo' } ].map((item) => (
                 <button key={item.id} onClick={() => { setCurrentPage(item.id as any); setIsMenuOpen(false); }} className={`text-[2.7rem] font-black text-left hover:text-[#FF3B30] transition-all tracking-tighter leading-none ${currentPage === item.id ? 'text-[#FF3B30]' : ''}`}>{item.name}</button>
             ))}
@@ -1063,7 +1064,7 @@ const App = () => {
               <section className="pt-44 pb-20 px-6 md:px-12 flex flex-col items-center text-center">
                 <span className="text-[#FF3B30] font-bold tracking-[0.2em] text-[10px] mb-8 uppercase">{t.hero.since}</span>
                 <h1 className="text-6xl md:text-[7.5rem] lg:text-[9.5rem] font-black leading-[0.9] tracking-tighter mb-12 uppercase">{t.hero.title_1} <br /> {t.hero.title_2} <br /> {t.hero.title_3} <span className="text-[#FF3B30]">YAM.</span></h1>
-                <motion.button whileHover={{ scale: 1.05 }} onClick={() => setCurrentPage('brand')} className="bg-[#FF3B30] text-white px-12 py-5 rounded-full text-sm font-black tracking-widest uppercase shadow-xl">{t.hero.cta}</motion.button>
+                <motion.button whileHover={{ scale: 1.05 }} onClick={() => document.getElementById('todays-brew')?.scrollIntoView({ behavior: 'smooth' })} className="bg-[#FF3B30] text-white px-12 py-5 rounded-full text-sm font-black tracking-widest uppercase shadow-xl">{t.hero.cta}</motion.button>
                 <div className="mt-28 w-full max-w-5xl aspect-video rounded-[40px] overflow-hidden shadow-2xl"><img src="/images/hero.jpg" className="w-full h-full object-cover" alt="Coffee" /></div>
               </section>
 
@@ -1108,7 +1109,7 @@ const App = () => {
                 `}</style>
               </section>
 
-              <section className="py-24 px-6 md:px-12 max-w-4xl mx-auto">
+              <section id="todays-brew" className="py-24 px-6 md:px-12 max-w-4xl mx-auto">
                 <h3 className="text-4xl md:text-5xl font-black italic mb-16 uppercase font-en tracking-tighter">
                   {t.home.todays_brew}
                 </h3>
@@ -1213,7 +1214,7 @@ const App = () => {
       <footer className="border-t border-black/5 dark:border-white/5 py-24 px-6 md:px-12 text-center">
         <h2 className="text-[12vw] md:text-[8rem] font-black mb-10 tracking-tighter leading-none opacity-10 hover:opacity-100 transition-opacity duration-700 select-none">YAM COFFEE</h2>
         <div className="flex justify-center gap-10 mb-12"><Instagram size={22} className="opacity-40 hover:opacity-100 hover:text-[#FF3B30]" /></div>
-        <p className="text-[9px] font-black opacity-20 tracking-[0.6em] uppercase">{t.footer.rights}</p>
+        <p className="text-[9px] font-black opacity-20 tracking-[0.3em] uppercase">{t.footer.rights}</p>
       </footer>
     </div>
   );
