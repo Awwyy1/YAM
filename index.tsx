@@ -82,7 +82,7 @@ const CONTENT = {
             title_1: "WEAR",
             title_2: "THE",
             title_accent: "VIBE.",
-            desc_hero: "Limited edition drops. Cotton. Made in Portugal.",
+            desc_hero: "Limited edition drops. Cotton. Made in Georgia.",
             add_to_cart: "Add to Cart",
             new_drop: "New Drop",
             materials: { title: "Materials", text: "100% Organic heavyweight cotton. Pre-shrunk and garment dyed for a vintage feel and long-lasting color." },
@@ -260,7 +260,7 @@ const CONTENT = {
             title_1: "ატარე",
             title_2: "ეს",
             title_accent: "ვაიბი.",
-            desc_hero: "ლიმიტირებული კოლექცია. ბამბა. დამზადებულია პორტუგალიაში.",
+            desc_hero: "ლიმიტირებული კოლექცია. ბამბა. დამზადებულია საქართველოში.",
             add_to_cart: "დამატება",
             new_drop: "ახალი",
             materials: { title: "მასალა", text: "100% ორგანული მძიმე ბამბა. წინასწარ დამუშავებული ვინტაჟური ეფექტისთვის." },
@@ -814,7 +814,7 @@ const GamePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) =
     const [timestamp] = useState(() => new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }));
     const ROWS = 8;
     const COLS = 4;
-    const startGame = () => { setHistory([]); setCurrentRow(0); setGameState('playing'); };
+    const startGame = () => { setHistory([]); setCurrentRow(0); setGameState('playing'); window.scrollTo(0, 0); };
     const handleTileClick = (r: number, c: number) => {
         if (gameState !== 'playing' || r !== currentRow) return;
         const bombIndex = Math.floor(Math.random() * COLS);
@@ -919,7 +919,7 @@ const GamePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) =
                             </div>
 
                             {/* Close button */}
-                            <button onClick={() => setGameState('idle')} className="absolute top-4 right-4 p-2 opacity-50 hover:opacity-100">
+                            <button onClick={() => { setGameState('idle'); window.scrollTo(0, 0); }} className="absolute top-4 right-4 p-2 opacity-50 hover:opacity-100">
                                 <X size={20} />
                             </button>
                         </motion.div>
@@ -960,7 +960,7 @@ const GamePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) =
                                 </button>
 
                                 <button
-                                    onClick={() => setGameState('idle')}
+                                    onClick={() => { setGameState('idle'); window.scrollTo(0, 0); }}
                                     className="px-12 py-4 rounded-full text-sm font-bold tracking-widest uppercase hover:bg-white/10 transition-colors"
                                 >
                                     Exit Game
