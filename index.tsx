@@ -844,21 +844,82 @@ const GamePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) =
             ) : gameState === 'idle' ? (
                 <button onClick={startGame} className="bg-[#FF3B30] text-white px-12 py-5 rounded-full text-sm font-black tracking-widest uppercase shadow-xl">{t.start}</button>
             ) : (
-                <div className="flex flex-col-reverse gap-3 p-6 bg-white dark:bg-zinc-900 rounded-[30px] shadow-2xl">
-                    {[...Array(ROWS)].map((_, r) => (
-                        <div key={r} className="flex gap-3">
-                            {[...Array(COLS)].map((_, c) => {
-                                let isRevealed = r < history.length && history[r].pick === c;
-                                let isBomb = isRevealed && history[r].bomb === c;
-                                return (
-                                    <button key={`${r}-${c}`} disabled={r !== currentRow || gameState !== 'playing'} onClick={() => handleTileClick(r, c)} className={`w-16 h-16 md:w-20 md:h-20 rounded-xl transition-all ${r === currentRow && gameState === 'playing' ? 'bg-zinc-100 dark:bg-zinc-800 ring-1 ring-[#FF3B30]/20' : 'bg-zinc-50 dark:bg-zinc-900 opacity-20'} ${isRevealed && !isBomb ? 'bg-green-500' : ''} ${isRevealed && isBomb ? 'bg-red-500' : ''}`}>
-                                        {isRevealed && !isBomb && <CoffeeBeanIcon size={24} className="text-white mx-auto" />}
-                                        {isRevealed && isBomb && <Bomb size={24} className="text-white mx-auto" />}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    ))}
+                <div className="w-full max-w-md">
+                    {/* Progress counter */}
+                    <div className="text-center mb-4">
+                        <p className="text-sm font-bold uppercase tracking-widest opacity-50">
+                            {history.length < 3 ? 'Choose wisely...' : history.length < 6 ? 'Keep going...' : history.length < 8 ? 'Almost there...' : ''}
+                        </p>
+                    </div>
+
+                    {/* Progress bar */}
+                    <div className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full mb-6 overflow-hidden">
+                        <motion.div
+                            className="h-full bg-[#FF3B30] rounded-full"
+                            initial={{ width: '0%' }}
+                            animate={{ width: `${(history.length / ROWS) * 100}%` }}
+                            transition={{ duration: 0.4, ease: 'easeOut' }}
+                        />
+                    </div>
+
+                    {/* Game board */}
+                    <div className="flex flex-col-reverse gap-2 p-4 md:p-6 bg-white dark:bg-zinc-900 rounded-[24px] shadow-2xl">
+                        {[...Array(ROWS)].map((_, r) => {
+                            const isActive = r === currentRow && gameState === 'playing';
+                            const isPassed = r < history.length;
+                            const isFuture = r > currentRow || (r > history.length && gameState !== 'playing');
+                            const isTop = r === ROWS - 1;
+
+                            return (
+                                <div key={r} className="flex items-center gap-2 md:gap-3">
+                                    {/* Row label */}
+                                    <div className="w-8 md:w-10 text-right shrink-0">
+                                        <span className={`text-[10px] md:text-xs font-black uppercase tracking-wider ${isActive ? 'text-[#FF3B30]' : isPassed ? 'text-green-500' : 'opacity-20'}`}>
+                                            {isTop ? 'TOP' : r + 1}
+                                        </span>
+                                    </div>
+
+                                    {/* Tiles */}
+                                    <div className="flex gap-2 md:gap-3 flex-1 justify-center">
+                                        {[...Array(COLS)].map((_, c) => {
+                                            const isRevealed = r < history.length && history[r].pick === c;
+                                            const isBomb = isRevealed && history[r].bomb === c;
+                                            const isSafe = isRevealed && !isBomb;
+
+                                            return (
+                                                <motion.button
+                                                    key={`${r}-${c}`}
+                                                    disabled={!isActive}
+                                                    onClick={() => handleTileClick(r, c)}
+                                                    whileHover={isActive ? { scale: 1.08 } : {}}
+                                                    whileTap={isActive ? { scale: 0.95 } : {}}
+                                                    className={`
+                                                        w-14 h-14 md:w-[72px] md:h-[72px] rounded-xl transition-all duration-200 flex items-center justify-center
+                                                        ${isSafe ? 'bg-green-500 shadow-lg shadow-green-500/20' : ''}
+                                                        ${isBomb ? 'bg-[#FF3B30] shadow-lg shadow-red-500/20' : ''}
+                                                        ${isActive && !isRevealed ? 'bg-zinc-100 dark:bg-zinc-800 border-2 border-[#FF3B30]/30 cursor-pointer hover:border-[#FF3B30] hover:shadow-md' : ''}
+                                                        ${isFuture && !isRevealed ? 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 opacity-40' : ''}
+                                                        ${isPassed && !isRevealed ? 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 opacity-60' : ''}
+                                                    `}
+                                                    style={isActive && !isRevealed ? { boxShadow: '0 0 12px rgba(255, 59, 48, 0.1)' } : {}}
+                                                >
+                                                    {isSafe && <CoffeeBeanIcon size={22} className="text-white" />}
+                                                    {isBomb && <Bomb size={22} className="text-white" />}
+                                                    {isActive && !isRevealed && <Coffee size={16} className="opacity-20" />}
+                                                    {isFuture && !isRevealed && <Lock size={12} className="opacity-15" />}
+                                                </motion.button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Row counter below board */}
+                    <div className="text-center mt-4">
+                        <span className="text-xs font-bold uppercase tracking-widest opacity-40">{history.length} / {ROWS} {t.row}s</span>
+                    </div>
                 </div>
             )}
 
