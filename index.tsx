@@ -1282,7 +1282,7 @@ const App = () => {
                 <div className="mt-28 w-full max-w-5xl aspect-video rounded-[40px] overflow-hidden shadow-2xl"><img src="/images/hero.jpg" className="w-full h-full object-cover" alt="Coffee" /></div>
               </section>
 
-              <section className="w-full overflow-hidden bg-[#FF3B30] py-5 -rotate-1 scale-[1.02]">
+              <section className="w-full overflow-hidden bg-[#FF3B30] py-5 -rotate-1 scale-[1.02] opacity-70" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%270 0 200 200%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.65%27 numOctaves=%273%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23n)%27 opacity=%270.15%27/%3E%3C/svg%3E")' }}>
                 <div className="flex animate-marquee whitespace-nowrap">
                   {[...Array(2)].map((_, loop) => (
                     <div key={loop} className="flex items-center shrink-0">
@@ -1323,8 +1323,8 @@ const App = () => {
                 `}</style>
               </section>
 
-              <section id="todays-brew" className="py-24 px-6 md:px-12 max-w-4xl mx-auto">
-                <h3 className="text-4xl md:text-5xl font-black italic mb-16 uppercase font-en tracking-tighter">
+              <section id="todays-brew" className="pt-24 pb-10 px-6 md:px-12 max-w-4xl mx-auto">
+                <h3 className="text-4xl md:text-5xl font-black italic mb-10 uppercase font-en tracking-tighter text-[#FF3B30]">
                   {t.home.todays_brew}
                 </h3>
                 <div className="flex flex-col gap-4">
@@ -1346,8 +1346,8 @@ const App = () => {
                 </div>
               </section>
 
-              <section className="py-24 px-6 md:px-12 max-w-4xl mx-auto">
-                <h3 className="text-4xl md:text-5xl font-black italic mb-16 uppercase font-en tracking-tighter">
+              <section className="py-10 px-6 md:px-12 max-w-4xl mx-auto">
+                <h3 className="text-4xl md:text-5xl font-black italic mb-10 uppercase font-en tracking-tighter text-[#FF3B30]">
                   {t.home.tea_title}
                 </h3>
                 <div className="flex flex-col gap-4">
@@ -1368,8 +1368,8 @@ const App = () => {
                 </div>
               </section>
 
-              <section className="py-24 px-6 md:px-12 max-w-4xl mx-auto">
-                <h3 className="text-4xl md:text-5xl font-black italic mb-16 uppercase font-en tracking-tighter">
+              <section className="py-10 px-6 md:px-12 max-w-4xl mx-auto">
+                <h3 className="text-4xl md:text-5xl font-black italic mb-10 uppercase font-en tracking-tighter text-[#FF3B30]">
                   {t.home.extra_title}
                 </h3>
                 <div className="flex flex-col gap-4">
