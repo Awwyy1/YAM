@@ -832,16 +832,15 @@ const GamePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) =
             {!isUnlocked ? (
                 <div className="w-full max-w-md bg-white dark:bg-zinc-900 p-8 rounded-[30px] shadow-2xl text-center border border-black/5 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-2 bg-[#FF3B30]"></div>
-                    <Lock className="mx-auto mb-6 opacity-20" size={48} />
-                    <h3 className="text-2xl font-black uppercase mb-2">{t.enter_code}</h3>
-                    <form onSubmit={(e) => { e.preventDefault(); setIsUnlocked(true); }} className="space-y-4">
+                    <Lock className="mx-auto mb-4 opacity-20" size={48} />
+                    <form onSubmit={(e) => { e.preventDefault(); setIsUnlocked(true); window.scrollTo(0, 0); }} className="space-y-4">
                         <input type="text" value={accessCode} onChange={(e) => setAccessCode(e.target.value.toUpperCase())} placeholder={t.code_placeholder} className="w-full bg-zinc-100 dark:bg-zinc-800 p-4 rounded-xl text-center font-bold tracking-widest uppercase outline-none focus:ring-2 ring-[#FF3B30]" />
                         <button type="submit" className="w-full bg-black dark:bg-white text-white dark:text-black py-4 rounded-xl font-bold uppercase tracking-widest text-sm hover:opacity-80">{t.unlock_btn}</button>
                     </form>
                     <button onClick={() => setShowModal(true)} className="mt-6 text-xs font-bold uppercase tracking-widest text-[#FF3B30] hover:underline">{t.get_code}</button>
                 </div>
             ) : gameState === 'idle' ? (
-                <button onClick={startGame} className="bg-[#FF3B30] text-white px-12 py-6 rounded-full text-xl font-black tracking-widest uppercase shadow-lg">{t.start}</button>
+                <button onClick={startGame} className="bg-[#FF3B30] text-white px-12 py-5 rounded-full text-sm font-black tracking-widest uppercase shadow-xl">{t.start}</button>
             ) : (
                 <div className="flex flex-col-reverse gap-3 p-6 bg-white dark:bg-zinc-900 rounded-[30px] shadow-2xl">
                     {[...Array(ROWS)].map((_, r) => (
