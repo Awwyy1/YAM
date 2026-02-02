@@ -43,6 +43,8 @@ const CONTENT = {
         },
         home: {
             todays_brew: "Today's Brew",
+            tea_title: "Tea",
+            extra_title: "Extra",
             bring_home: "Bring YAM",
             bring_home_accent: "Home.",
             view_apparel: "View Apparel",
@@ -221,6 +223,8 @@ const CONTENT = {
         },
         home: {
             todays_brew: "დღის ყავა",
+            tea_title: "ჩაი",
+            extra_title: "დამატებით",
             bring_home: "წაიღე YAM",
             bring_home_accent: "სახლში.",
             view_apparel: "ტანსაცმელი",
@@ -410,6 +414,44 @@ const COFFEE_MENU_DATA = {
         { name: 'ვანილის ქოლდ ბრიუ', price: '₾5.75', desc: '24 საათიანი დაყოვნება, ბუნებრივი ვანილი' },
         { name: 'კარამელ მაკიატო', price: '₾5.50', desc: 'რძის, ესპრესოს და კარამელის ფენები' },
         { name: 'შვრიის მოკა', price: '₾6.00', desc: 'მდიდარი შოკოლადი და შვრიის რძე' },
+    ]
+};
+
+const TEA_MENU_DATA = {
+    en: [
+        { name: 'Green Tea', price: '₾3.50', desc: 'Classic Japanese sencha, light and grassy' },
+        { name: 'Earl Grey', price: '₾3.50', desc: 'Black tea with Italian bergamot oil' },
+        { name: 'Chamomile', price: '₾3.50', desc: 'Calming herbal infusion, caffeine-free' },
+        { name: 'Jasmine Oolong', price: '₾4.00', desc: 'Semi-oxidized leaves with jasmine blossoms' },
+        { name: 'Fresh Mint', price: '₾3.75', desc: 'Hand-picked garden mint, served hot' },
+    ],
+    ge: [
+        { name: 'მწვანე ჩაი', price: '₾3.50', desc: 'კლასიკური იაპონური სენჩა' },
+        { name: 'ერლ გრეი', price: '₾3.50', desc: 'შავი ჩაი ბერგამოტის ზეთით' },
+        { name: 'გვირილა', price: '₾3.50', desc: 'დამამშვიდებელი მცენარეული ჩაი' },
+        { name: 'ჟასმინის ოლონგი', price: '₾4.00', desc: 'ნახევრად ფერმენტირებული ჟასმინით' },
+        { name: 'ახალი პიტნა', price: '₾3.75', desc: 'ბაღის პიტნა, ცხლად მიწოდებული' },
+    ]
+};
+
+const EXTRA_MENU_DATA = {
+    en: [
+        { name: 'Croissant', price: '₾4.50', desc: 'French butter croissant, baked fresh daily' },
+        { name: 'Almond Croissant', price: '₾5.50', desc: 'Filled with almond cream and toasted flakes' },
+        { name: 'Banana Bread', price: '₾4.00', desc: 'Homemade with walnuts and dark chocolate' },
+        { name: 'Cheesecake', price: '₾6.50', desc: 'New York style, creamy and dense' },
+        { name: 'Cookie', price: '₾3.00', desc: 'Chunky chocolate chip, soft center' },
+        { name: 'Granola Bowl', price: '₾7.00', desc: 'Greek yogurt, honey, seasonal fruits' },
+        { name: 'Avocado Toast', price: '₾8.50', desc: 'Sourdough, smashed avo, chili flakes, egg' },
+    ],
+    ge: [
+        { name: 'კრუასანი', price: '₾4.50', desc: 'ფრანგული კარაქის კრუასანი, ყოველდღე ახალი' },
+        { name: 'ნუშის კრუასანი', price: '₾5.50', desc: 'ნუშის კრემით და შემწვარი ფანტელებით' },
+        { name: 'ბანანის პური', price: '₾4.00', desc: 'ნიგვზით და შავი შოკოლადით' },
+        { name: 'ჩიზქეიქი', price: '₾6.50', desc: 'ნიუ-იორკის სტილი, კრემისებრი' },
+        { name: 'ქუქი', price: '₾3.00', desc: 'შოკოლადის ნატეხებით, რბილი შუაგული' },
+        { name: 'გრანოლა ბოულ', price: '₾7.00', desc: 'ბერძნული იოგურტი, თაფლი, ხილი' },
+        { name: 'ავოკადო ტოსტი', price: '₾8.50', desc: 'სოურდო, ავოკადო, ჩილი, კვერცხი' },
     ]
 };
 
@@ -1291,6 +1333,50 @@ const App = () => {
                         key={idx}
                         onClick={() => setActiveDrink(idx)}
                         className={`flex justify-between items-start pb-3 border-b border-current/10 cursor-pointer transition-colors duration-300 ${activeDrink === idx ? 'text-[#FF3B30]' : 'hover:text-[#FF3B30]'}`}
+                    >
+                      <div className="flex flex-col gap-0 text-left w-full">
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-[1.45rem] md:text-[2rem] font-black uppercase leading-none">{item.name}</span>
+                          <PriceDisplay price={item.price} className="text-[1.35rem] md:text-[1.7rem] font-black" />
+                        </div>
+                        <span className="text-sm font-medium opacity-50">{item.desc}</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="py-24 px-6 md:px-12 max-w-4xl mx-auto">
+                <h3 className="text-4xl md:text-5xl font-black italic mb-16 uppercase font-en tracking-tighter">
+                  {t.home.tea_title}
+                </h3>
+                <div className="flex flex-col gap-4">
+                  {TEA_MENU_DATA[lang].map((item, idx) => (
+                    <motion.div
+                        key={`tea-${idx}`}
+                        className="flex justify-between items-start pb-3 border-b border-current/10 transition-colors duration-300 hover:text-[#FF3B30]"
+                    >
+                      <div className="flex flex-col gap-0 text-left w-full">
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-[1.45rem] md:text-[2rem] font-black uppercase leading-none">{item.name}</span>
+                          <PriceDisplay price={item.price} className="text-[1.35rem] md:text-[1.7rem] font-black" />
+                        </div>
+                        <span className="text-sm font-medium opacity-50">{item.desc}</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="py-24 px-6 md:px-12 max-w-4xl mx-auto">
+                <h3 className="text-4xl md:text-5xl font-black italic mb-16 uppercase font-en tracking-tighter">
+                  {t.home.extra_title}
+                </h3>
+                <div className="flex flex-col gap-4">
+                  {EXTRA_MENU_DATA[lang].map((item, idx) => (
+                    <motion.div
+                        key={`extra-${idx}`}
+                        className="flex justify-between items-start pb-3 border-b border-current/10 transition-colors duration-300 hover:text-[#FF3B30]"
                     >
                       <div className="flex flex-col gap-0 text-left w-full">
                         <div className="flex justify-between items-baseline">
