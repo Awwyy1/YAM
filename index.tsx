@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, X, Instagram, Sun, Moon, Leaf, Coffee, Globe, ArrowUpRight, MapPin, Clock, Trash2, Gamepad2, Share2, Lock, Trophy, AlertCircle, Bomb, Type, Palette, Layout, Grid, Check, Sparkles, Eye, Camera, MessageSquare, Heart } from 'lucide-react';
+import { ShoppingCart, X, Instagram, Sun, Moon, Leaf, Coffee, Globe, ArrowUpRight, MapPin, Clock, Trash2, Gamepad2, Share2, Lock, Trophy, AlertCircle, Bomb, Type, Palette, Layout, Grid, Check, Sparkles, Eye, Camera, MessageSquare, Heart, RefreshCw } from 'lucide-react';
 
 const COLORS = {
   light: {
@@ -922,6 +922,50 @@ const GamePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) =
                             <button onClick={() => setGameState('idle')} className="absolute top-4 right-4 p-2 opacity-50 hover:opacity-100">
                                 <X size={20} />
                             </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* LOSE OVERLAY - BAD BEAN */}
+            <AnimatePresence>
+                {gameState === 'lost' && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-[#FF3B30]/90 backdrop-blur-md p-6"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="text-center text-white"
+                        >
+                            <Bomb size={80} className="mx-auto mb-6 drop-shadow-lg" />
+
+                            <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none mb-4 drop-shadow-md">
+                                BAD<br/>BEAN.
+                            </h2>
+
+                            <p className="font-bold uppercase tracking-widest opacity-80 mb-10">
+                                {t.lose_desc}
+                            </p>
+
+                            <div className="flex flex-col gap-4">
+                                <button
+                                    onClick={startGame}
+                                    className="bg-white text-[#FF3B30] px-12 py-5 rounded-full text-sm font-black tracking-widest uppercase shadow-xl hover:scale-105 transition-transform flex items-center justify-center gap-2"
+                                >
+                                    <RefreshCw size={20} strokeWidth={3} /> {t.retry}
+                                </button>
+
+                                <button
+                                    onClick={() => setGameState('idle')}
+                                    className="px-12 py-4 rounded-full text-sm font-bold tracking-widest uppercase hover:bg-white/10 transition-colors"
+                                >
+                                    Exit Game
+                                </button>
+                            </div>
                         </motion.div>
                     </motion.div>
                 )}
