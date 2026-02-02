@@ -810,6 +810,8 @@ const GamePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) =
     const [gameState, setGameState] = useState<'idle' | 'playing' | 'won' | 'lost'>('idle');
     const [currentRow, setCurrentRow] = useState(0);
     const [history, setHistory] = useState<Array<{bomb: number, pick: number}>>([]);
+    const [ticketId] = useState(() => 'YAM-' + Math.random().toString(36).substring(2, 8).toUpperCase());
+    const [timestamp] = useState(() => new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }));
     const ROWS = 8;
     const COLS = 4;
     const startGame = () => { setHistory([]); setCurrentRow(0); setGameState('playing'); };
@@ -823,7 +825,7 @@ const GamePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) =
         else setCurrentRow(prev => prev + 1);
     };
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-40 pb-20 px-6 md:px-12 max-w-7xl mx-auto flex flex-col items-center">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-40 pb-20 px-6 md:px-12 max-w-7xl mx-auto flex flex-col items-center relative">
             <div className="text-center mb-12">
                 <span className="text-[#FF3B30] font-bold tracking-widest text-sm uppercase mb-4 block flex items-center justify-center gap-2"><Gamepad2 size={16} /> {t.label}</span>
                 <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase mb-6">{t.title_1} {t.title_2} <span className="text-[#FF3B30]">{t.title_accent}</span></h2>
@@ -859,6 +861,71 @@ const GamePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) =
                     ))}
                 </div>
             )}
+
+            {/* WIN OVERLAY - THE GOLDEN TICKET */}
+            <AnimatePresence>
+                {gameState === 'won' && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-6"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.8, y: 50, opacity: 0 }}
+                            animate={{ scale: 1, y: 0, opacity: 1 }}
+                            transition={{ type: "spring", bounce: 0.4 }}
+                            className="bg-[#F4F4F2] text-black w-full max-w-sm rounded-none shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] relative overflow-hidden"
+                        >
+                            {/* Ticket cutouts top & bottom */}
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-black rounded-full"></div>
+                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-8 h-8 bg-black rounded-full"></div>
+
+                            {/* Ticket content */}
+                            <div className="p-8 pb-12 flex flex-col items-center text-center border-2 border-dashed border-black/10 m-2">
+                                <Trophy size={48} className="text-[#FF3B30] mb-4" strokeWidth={1.5} />
+
+                                <h2 className="text-5xl font-black uppercase tracking-tighter leading-none mb-2 text-[#FF3B30]">
+                                    {t.win_title}
+                                </h2>
+                                <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-40 mb-8">
+                                    Free Signature Coffee
+                                </p>
+
+                                {/* Ticket info */}
+                                <div className="w-full bg-white border border-black/10 p-4 mb-6 font-mono text-sm space-y-2">
+                                    <div className="flex justify-between border-b border-black/10 pb-2">
+                                        <span className="opacity-50">{t.ticket_id}</span>
+                                        <span className="font-bold">{ticketId}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="opacity-50">{t.valid_until}</span>
+                                        <span className="font-bold">{timestamp}</span>
+                                    </div>
+                                </div>
+
+                                {/* Barcode */}
+                                <div className="h-12 w-full bg-black flex items-center justify-center overflow-hidden mb-4">
+                                    <div className="flex gap-1 h-full items-center opacity-80">
+                                        {[...Array(30)].map((_, i) => (
+                                            <div key={i} style={{ width: Math.random() > 0.5 ? 2 : 4, height: '80%' }} className="bg-white"></div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <p className="text-[10px] uppercase font-bold text-[#FF3B30]">
+                                    {t.win_desc}
+                                </p>
+                            </div>
+
+                            {/* Close button */}
+                            <button onClick={() => setGameState('idle')} className="absolute top-4 right-4 p-2 opacity-50 hover:opacity-100">
+                                <X size={20} />
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 };
