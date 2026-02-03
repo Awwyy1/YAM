@@ -18,20 +18,20 @@ Examples of the vibe:
 - "Stop stirring the same worry. Set down the spoon. The answer is already at the bottom of your cup."`;
 
 export default async function handler(req: Request) {
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
-  }
+  // GET = diagnostic mode (open in browser to debug)
+  const isDebug = req.method === 'GET';
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'API key not configured', hint: 'Set GEMINI_API_KEY in Vercel env vars' }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'API key not configured', hint: 'Set GEMINI_API_KEY in Vercel Environment Variables' }), {
+      status: 500, headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   let lang = 'en';
-  try {
-    const body = await req.json();
-    lang = body.lang || 'en';
-  } catch {}
+  if (req.method === 'POST') {
+    try { const body = await req.json(); lang = body.lang || 'en'; } catch {}
+  }
 
   const userPrompt = lang === 'ge'
     ? 'წაიკითხე ჩემი ყავის ნალექი და მითხარი ჩემი ბედი. უპასუხე ქართულად.'
@@ -58,20 +58,26 @@ export default async function handler(req: Request) {
 
     if (!res.ok) {
       const err = await res.text();
-      return new Response(JSON.stringify({ error: 'Gemini API error', status: res.status, details: err }), { status: 502 });
+      return new Response(JSON.stringify({ error: 'Gemini API error', gemini_status: res.status, details: err, key_preview: apiKey.substring(0, 8) + '...' }), {
+        status: 502, headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const data = await res.json();
     const prediction = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
     if (!prediction) {
-      return new Response(JSON.stringify({ error: 'Empty response', data }), { status: 502 });
+      return new Response(JSON.stringify({ error: 'Empty response from model', raw: data }), {
+        status: 502, headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    return new Response(JSON.stringify({ prediction }), {
+    return new Response(JSON.stringify({ prediction, ...(isDebug ? { debug: true, lang } : {}) }), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (e: any) {
-    return new Response(JSON.stringify({ error: 'Network error', message: e.message }), { status: 502 });
+    return new Response(JSON.stringify({ error: 'Network error', message: e.message }), {
+      status: 502, headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
