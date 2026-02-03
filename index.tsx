@@ -131,6 +131,7 @@ const CONTENT = {
             btn_sip: "TAKE A SIP",
             btn_reading: "READING GROUNDS...",
             btn_retry: "CONSULT AGAIN",
+            btn_again: "AGAIN",
             instruction: "Focus on your question...",
             predictions: [
                 "Focus on the grind today. The results will brew.",
@@ -311,6 +312,7 @@ const CONTENT = {
             btn_sip: "მოსვი ყავა",
             btn_reading: "ვიკვლევ ნალექს...",
             btn_retry: "თავიდან",
+            btn_again: "თავიდან",
             instruction: "კონცენტრირდი კითხვაზე...",
             predictions: [
                 "ფოკუსირდი მთავარზე. შედეგი მოიხარშება.",
@@ -1087,6 +1089,7 @@ const OraclePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang })
     const [state, setState] = useState<'ready' | 'sipping' | 'reading' | 'revealed'>('ready');
     const [prediction, setPrediction] = useState('');
     const [blobs, setBlobs] = useState<string[]>([]);
+    const [showShareCard, setShowShareCard] = useState(false);
 
     useEffect(() => {
         if (state === 'reading') {
@@ -1214,17 +1217,68 @@ const OraclePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang })
                 </AnimatePresence>
             </div>
 
-            <button
-                onClick={handleAction}
-                disabled={state === 'sipping' || state === 'reading'}
-                style={{ width: 'fit-content', whiteSpace: 'nowrap' }}
-                className={`
-                    px-12 py-4 rounded-full text-sm md:text-base font-black tracking-widest uppercase shadow-lg transition-all
-                    ${state === 'sipping' || state === 'reading' ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 cursor-wait' : 'bg-[#FF3B30] text-white hover:scale-105'}
-                `}
-            >
-                {state === 'ready' ? t.btn_sip : state === 'sipping' ? '...' : state === 'reading' ? t.btn_reading : t.btn_retry}
-            </button>
+            <div className="flex items-center gap-3">
+                <button
+                    onClick={handleAction}
+                    disabled={state === 'sipping' || state === 'reading'}
+                    style={{ width: 'fit-content', whiteSpace: 'nowrap' }}
+                    className={`
+                        px-12 py-4 rounded-full text-sm md:text-base font-black tracking-widest uppercase shadow-lg transition-all
+                        ${state === 'sipping' || state === 'reading' ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 cursor-wait' : 'bg-[#FF3B30] text-white hover:scale-105'}
+                    `}
+                >
+                    {state === 'ready' ? t.btn_sip : state === 'sipping' ? '...' : state === 'reading' ? t.btn_reading : t.btn_again}
+                </button>
+                {state === 'revealed' && (
+                    <motion.button
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        onClick={() => { setShowShareCard(true); trackEvent('oracle_share'); }}
+                        className="w-12 h-12 rounded-full border-2 border-[#FF3B30] flex items-center justify-center hover:bg-[#FF3B30] hover:text-white transition-all text-[#FF3B30]"
+                    >
+                        <Share2 size={18} />
+                    </motion.button>
+                )}
+            </div>
+
+            {/* Share Card Modal */}
+            <AnimatePresence>
+                {showShareCard && (
+                    <>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowShareCard(false)} className="fixed inset-0 bg-black/60 backdrop-blur-md z-[80]" />
+                        <motion.div initial={{ opacity: 0, scale: 0.85, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} transition={{ type: "spring", bounce: 0.3 }} className="fixed inset-0 z-[90] flex items-center justify-center p-6 pointer-events-none">
+                            <div className="w-full max-w-xs pointer-events-auto relative">
+                                <button onClick={() => setShowShareCard(false)} className="absolute -top-12 right-0 text-white/70 hover:text-white"><X size={24} /></button>
+                                <div className="aspect-[9/16] w-full bg-[#F4F4F2] dark:bg-[#0A0A0A] rounded-[24px] overflow-hidden relative shadow-2xl border-4 border-[#FF3B30] flex flex-col p-8 text-center justify-between select-none">
+                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-20 pointer-events-none"></div>
+                                    <div className="absolute top-[-20%] left-[-20%] w-[140%] h-[140%] rounded-full bg-[#FF3B30] blur-[120px] opacity-10"></div>
+                                    <div className="relative z-10 flex flex-col items-center">
+                                        <div className="w-12 h-12 rounded-full border border-current flex items-center justify-center mb-4">
+                                            <Eye size={24} className="text-[#FF3B30]" />
+                                        </div>
+                                        <h4 className="font-black text-sm uppercase tracking-[0.3em] opacity-40">YAM ORACLE</h4>
+                                    </div>
+                                    <div className="relative z-10 flex-1 flex items-center justify-center py-4">
+                                        <p className={`font-black uppercase leading-[1.1] text-[#1C1C1E] dark:text-[#F0F0F0] ${prediction.length > 50 ? 'text-2xl' : 'text-4xl'}`}>
+                                            &ldquo;{prediction}&rdquo;
+                                        </p>
+                                    </div>
+                                    <div className="relative z-10 border-t-2 border-current/10 pt-6 flex justify-between items-end">
+                                        <div className="text-left">
+                                            <p className="font-black text-lg uppercase tracking-tighter text-[#FF3B30]">YAM COFFEE</p>
+                                            <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest">yam.ge</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest">{new Date().toLocaleDateString()}</p>
+                                            <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest">{new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
 
         </motion.div>
     );
