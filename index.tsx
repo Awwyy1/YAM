@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, X, Instagram, Sun, Moon, Leaf, Coffee, Globe, ArrowUpRight, MapPin, Clock, Trash2, Gamepad2, Share2, Lock, Trophy, AlertCircle, Bomb, Type, Palette, Layout, Grid, Check, Sparkles, Eye, Camera, MessageSquare, Heart, RefreshCw } from 'lucide-react';
 
@@ -1238,42 +1239,43 @@ const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void; items: Produc
 };
 
 const App = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isDark, setIsDark] = useState(false);
   const [lang, setLang] = useState<Lang>('en');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState<'home' | 'brand' | 'menu' | 'shop' | 'game' | 'logo' | 'oracle'>('home');
   const [cartItems, setCartItems] = useState<Product[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [activeDrink, setActiveDrink] = useState<number | null>(null);
   const theme = isDark ? COLORS.dark : COLORS.light;
   const t = CONTENT[lang];
-  useEffect(() => { window.scrollTo(0, 0); }, [currentPage]);
+  useEffect(() => { window.scrollTo(0, 0); }, [location.pathname]);
   return (
     <div className={`min-h-screen transition-colors duration-500 selection:bg-[#FF3B30] selection:text-white ${isDark ? 'dark' : ''} ${lang === 'en' ? 'font-en' : 'font-ge'}`} style={{ backgroundColor: theme.base, color: theme.text }}>
       <nav className="fixed top-0 left-0 w-full z-50 px-6 py-6 md:px-12 flex items-center justify-between backdrop-blur-sm">
         <div className="flex-1"><button onClick={() => setIsMenuOpen(true)} className="hover:opacity-60 transition-opacity"><div className="space-y-1"><span className={`block w-5 h-0.5 ${isDark ? 'bg-white' : 'bg-black'}`}></span><span className={`block w-5 h-0.5 ${isDark ? 'bg-white' : 'bg-black'}`}></span></div></button></div>
-        <div className="flex-1 flex justify-center"><button onClick={() => setCurrentPage('home')} className="text-xl font-black tracking-tighter uppercase"><span className="text-[#FF3B30]">YAM</span><span className="ml-1.5" style={{ color: isDark ? '#FFFFFF' : '#0A0A0A' }}>COFFEE</span></button></div>
+        <div className="flex-1 flex justify-center"><button onClick={() => navigate('/')} className="text-xl font-black tracking-tighter uppercase"><span className="text-[#FF3B30]">YAM</span><span className="ml-1.5" style={{ color: isDark ? '#FFFFFF' : '#0A0A0A' }}>COFFEE</span></button></div>
         <div className="flex-1 flex items-center justify-end gap-5">
           <button onClick={() => setLang(l => l === 'en' ? 'ge' : 'en')} className="text-xs font-black tracking-widest uppercase border border-current px-2 py-0.5 rounded hover:bg-[#FF3B30] hover:text-white hover:border-[#FF3B30] transition-all">
             {lang === 'en' ? 'GE' : 'EN'}
           </button>
           <button onClick={() => setIsDark(!isDark)} className="opacity-70 hover:opacity-100 transition-opacity">{isDark ? <Sun size={18} /> : <Moon size={18} />}</button>
-          {currentPage === 'shop' && cartItems.length > 0 && <div onClick={() => setIsCartOpen(true)} className="relative cursor-pointer"><ShoppingCart size={20} /><span className="absolute -top-2 -right-2 bg-[#FF3B30] text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{cartItems.length}</span></div>}
+          {location.pathname === '/shop' && cartItems.length > 0 && <div onClick={() => setIsCartOpen(true)} className="relative cursor-pointer"><ShoppingCart size={20} /><span className="absolute -top-2 -right-2 bg-[#FF3B30] text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{cartItems.length}</span></div>}
         </div>
       </nav>
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} items={cartItems} onRemove={(idx) => setCartItems(prev => prev.filter((_, i) => i !== idx))} isDark={isDark} lang={lang} />
       <AnimatePresence>
         {isMenuOpen && (
           <><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} onClick={() => setIsMenuOpen(false)} className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60]" /><motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'tween', duration: 0.55, ease: [0.32, 0.72, 0, 1] }} className="fixed top-0 left-0 h-full w-full max-w-sm z-[70] p-12 flex flex-col" style={{ backgroundColor: theme.base }}><button onClick={() => setIsMenuOpen(false)} className="self-end mb-6 p-2"><X size={28} /></button><div className="flex flex-col gap-2">
-            {[ { name: t.nav.home, id: 'home' }, { name: t.nav.brand, id: 'brand' }, { name: t.nav.menu, id: 'menu', disabled: true }, { name: t.nav.shop, id: 'shop' }, { name: t.nav.game, id: 'game' }, { name: t.nav.oracle, id: 'oracle' }, { name: t.nav.logo, id: 'logo', disabled: true } ].map((item) => (
-                <button key={item.id} onClick={item.disabled ? undefined : () => { setCurrentPage(item.id as any); setIsMenuOpen(false); }} className={`text-[2.7rem] font-black text-left transition-all tracking-tighter leading-none whitespace-nowrap ${item.disabled ? 'cursor-default' : `hover:text-[#FF3B30] ${currentPage === item.id ? 'text-[#FF3B30]' : ''}`}`}>{item.name}{item.disabled && <span className="ml-2 text-[0.55rem] font-normal italic tracking-wide" style={{ verticalAlign: 'baseline', color: '#FF3B30' }}>Coming soon</span>}</button>
+            {[ { name: t.nav.home, path: '/' }, { name: t.nav.brand, path: '/brand' }, { name: t.nav.menu, path: '/menu', disabled: true }, { name: t.nav.shop, path: '/shop' }, { name: t.nav.game, path: '/game' }, { name: t.nav.oracle, path: '/oracle' }, { name: t.nav.logo, path: '/book', disabled: true } ].map((item) => (
+                <button key={item.path} onClick={item.disabled ? undefined : () => { navigate(item.path); setIsMenuOpen(false); }} className={`text-[2.7rem] font-black text-left transition-all tracking-tighter leading-none whitespace-nowrap ${item.disabled ? 'cursor-default' : `hover:text-[#FF3B30] ${location.pathname === item.path ? 'text-[#FF3B30]' : ''}`}`}>{item.name}{item.disabled && <span className="ml-2 text-[0.55rem] font-normal italic tracking-wide" style={{ verticalAlign: 'baseline', color: '#FF3B30' }}>Coming soon</span>}</button>
             ))}
           </div></motion.div></>
         )}
       </AnimatePresence>
       <main>
         <AnimatePresence mode="wait">
-          {currentPage === 'home' && (
+          {location.pathname === '/' && (
             <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <section className="pt-44 pb-20 px-6 md:px-12 flex flex-col items-center text-center">
                 <span className="text-[#FF3B30] font-bold tracking-[0.2em] text-[10px] mb-8 uppercase">{t.hero.since}</span>
@@ -1397,7 +1399,7 @@ const App = () => {
                           {t.home.bring_home} <br/> <span className="text-[#FF3B30]">{t.home.bring_home_accent}</span>
                        </h3>
                        <button 
-                          onClick={() => setCurrentPage('shop')}
+                          onClick={() => navigate('/shop')}
                           className="hidden md:flex items-center gap-2 font-bold uppercase tracking-widest text-xs hover:text-[#FF3B30] transition-colors"
                        >
                           {t.home.view_apparel} <ArrowUpRight size={16} />
@@ -1422,7 +1424,7 @@ const App = () => {
                        ))}
                     </div>
                     <button 
-                        onClick={() => setCurrentPage('shop')}
+                        onClick={() => navigate('/shop')}
                         className="md:hidden mt-10 w-full py-4 border border-current rounded-full font-bold uppercase tracking-widest text-xs"
                     >
                           {t.home.view_apparel}
@@ -1461,12 +1463,12 @@ const App = () => {
               </section>
             </motion.div>
           )}
-          {currentPage === 'brand' && <BrandPage isDark={isDark} lang={lang} />}
-          {currentPage === 'menu' && <MenuPage isDark={isDark} lang={lang} />}
-          {currentPage === 'shop' && <ShopPage isDark={isDark} addToCart={(p) => setCartItems(prev => [...prev, p])} lang={lang} />}
-          {currentPage === 'game' && <GamePage isDark={isDark} lang={lang} />}
-          {currentPage === 'oracle' && <OraclePage isDark={isDark} lang={lang} />}
-          {currentPage === 'logo' && <LogoPage isDark={isDark} lang={lang} />}
+          {location.pathname === '/brand' && <BrandPage isDark={isDark} lang={lang} />}
+          {location.pathname === '/menu' && <MenuPage isDark={isDark} lang={lang} />}
+          {location.pathname === '/shop' && <ShopPage isDark={isDark} addToCart={(p) => setCartItems(prev => [...prev, p])} lang={lang} />}
+          {location.pathname === '/game' && <GamePage isDark={isDark} lang={lang} />}
+          {location.pathname === '/oracle' && <OraclePage isDark={isDark} lang={lang} />}
+          {location.pathname === '/book' && <LogoPage isDark={isDark} lang={lang} />}
         </AnimatePresence>
       </main>
       <footer className="border-t border-black/5 dark:border-white/5 py-24 px-6 md:px-12 text-center">
@@ -1479,4 +1481,4 @@ const App = () => {
 };
 
 const root = createRoot(document.getElementById('root')!);
-root.render(<App />);
+root.render(<BrowserRouter><App /></BrowserRouter>);
