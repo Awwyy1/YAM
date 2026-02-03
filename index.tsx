@@ -1090,25 +1090,36 @@ const OraclePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang })
 
     useEffect(() => {
         if (state === 'reading') {
-            const timeout = setTimeout(() => {
-                const randomPred = t.predictions[Math.floor(Math.random() * t.predictions.length)];
-                setPrediction(randomPred);
-                
-                // Generate random blobs for the grounds
-                const newBlobs = Array.from({ length: 5 }).map(() => {
-                    const size = Math.floor(Math.random() * 80) + 40;
-                    const left = Math.floor(Math.random() * 60) + 20;
-                    const top = Math.floor(Math.random() * 60) + 20;
-                    const radius = `${Math.floor(Math.random() * 50) + 30}% ${Math.floor(Math.random() * 50) + 30}% ${Math.floor(Math.random() * 50) + 30}% ${Math.floor(Math.random() * 50) + 30}%`;
-                    return `width: ${size}px; height: ${size}px; left: ${left}%; top: ${top}%; border-radius: ${radius};`;
-                });
-                setBlobs(newBlobs);
+            let cancelled = false;
+            const generateBlobs = () => Array.from({ length: 5 }).map(() => {
+                const size = Math.floor(Math.random() * 80) + 40;
+                const left = Math.floor(Math.random() * 60) + 20;
+                const top = Math.floor(Math.random() * 60) + 20;
+                const radius = `${Math.floor(Math.random() * 50) + 30}% ${Math.floor(Math.random() * 50) + 30}% ${Math.floor(Math.random() * 50) + 30}% ${Math.floor(Math.random() * 50) + 30}%`;
+                return `width: ${size}px; height: ${size}px; left: ${left}%; top: ${top}%; border-radius: ${radius};`;
+            });
+            const reveal = (text: string) => {
+                if (cancelled) return;
+                setPrediction(text);
+                setBlobs(generateBlobs());
                 setState('revealed');
-                trackEvent('oracle_revealed', { prediction: randomPred });
-            }, 3000);
-            return () => clearTimeout(timeout);
+                trackEvent('oracle_revealed', { prediction: text, source: 'gemini' });
+            };
+            const fallback = () => {
+                const randomPred = t.predictions[Math.floor(Math.random() * t.predictions.length)];
+                reveal(randomPred);
+            };
+            fetch('/api/oracle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lang }),
+            })
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(data => data.prediction ? reveal(data.prediction) : fallback())
+                .catch(() => fallback());
+            return () => { cancelled = true; };
         }
-    }, [state, t.predictions]);
+    }, [state, t.predictions, lang]);
 
     const handleAction = () => {
         if (state === 'ready') { setState('sipping'); trackEvent('oracle_start'); }
