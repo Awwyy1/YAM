@@ -24,7 +24,7 @@ export default async function handler(req: Request) {
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'API key not configured' }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'API key not configured', hint: 'Set GEMINI_API_KEY in Vercel env vars' }), { status: 500 });
   }
 
   let lang = 'en';
@@ -39,15 +39,16 @@ export default async function handler(req: Request) {
 
   try {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: userPrompt }] }],
-          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents: [
+            { role: 'user', parts: [{ text: SYSTEM_PROMPT + '\n\n' + userPrompt }] }
+          ],
           generationConfig: {
-            temperature: 1.2,
+            temperature: 1.0,
             maxOutputTokens: 100,
             topP: 0.95,
           },
@@ -57,20 +58,20 @@ export default async function handler(req: Request) {
 
     if (!res.ok) {
       const err = await res.text();
-      return new Response(JSON.stringify({ error: 'Gemini API error', details: err }), { status: 502 });
+      return new Response(JSON.stringify({ error: 'Gemini API error', status: res.status, details: err }), { status: 502 });
     }
 
     const data = await res.json();
     const prediction = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
     if (!prediction) {
-      return new Response(JSON.stringify({ error: 'Empty response from Gemini' }), { status: 502 });
+      return new Response(JSON.stringify({ error: 'Empty response', data }), { status: 502 });
     }
 
     return new Response(JSON.stringify({ prediction }), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (e: any) {
-    return new Response(JSON.stringify({ error: 'Failed to reach Gemini', details: e.message }), { status: 502 });
+    return new Response(JSON.stringify({ error: 'Network error', message: e.message }), { status: 502 });
   }
 }
