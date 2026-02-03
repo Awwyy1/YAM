@@ -4,6 +4,10 @@ import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-ro
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, X, Instagram, Sun, Moon, Leaf, Coffee, Globe, ArrowUpRight, MapPin, Clock, Trash2, Gamepad2, Share2, Lock, Trophy, AlertCircle, Bomb, Type, Palette, Layout, Grid, Check, Sparkles, Eye, Camera, MessageSquare, Heart, RefreshCw } from 'lucide-react';
 
+declare global { interface Window { gtag: (...args: any[]) => void; } }
+const gtag = (...args: any[]) => { if (window.gtag) window.gtag(...args); };
+const trackEvent = (name: string, params?: Record<string, any>) => gtag('event', name, params);
+
 const COLORS = {
   light: {
     base: '#F4F4F2',
@@ -646,7 +650,7 @@ const ShopPage: React.FC<{ isDark: boolean; addToCart: (item: Product) => void; 
                                     <>
                                         <motion.img whileHover={{ scale: 1.05 }} transition={{ duration: 0.5 }} src={item.img} alt={item.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
                                         <div className="absolute inset-x-4 bottom-4">
-                                            <button onClick={(e) => { e.stopPropagation(); addToCart(item); }} className="w-full py-4 bg-[#FF3B30] text-white font-black uppercase tracking-widest text-xs opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-xl">{t.add_to_cart}</button>
+                                            <button onClick={(e) => { e.stopPropagation(); addToCart(item); trackEvent('add_to_cart', { item_name: item.name, item_price: item.price }); }} className="w-full py-4 bg-[#FF3B30] text-white font-black uppercase tracking-widest text-xs opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-xl">{t.add_to_cart}</button>
                                         </div>
                                         <div className="absolute top-4 left-4 bg-white dark:bg-black px-3 py-1 text-[10px] font-bold uppercase tracking-widest">{t.new_drop}</div>
                                     </>
@@ -857,14 +861,14 @@ const GamePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) =
     const [timestamp] = useState(() => new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }));
     const ROWS = 8;
     const COLS = 4;
-    const startGame = () => { setHistory([]); setCurrentRow(0); setGameState('playing'); window.scrollTo(0, 0); };
+    const startGame = () => { setHistory([]); setCurrentRow(0); setGameState('playing'); window.scrollTo(0, 0); trackEvent('game_start'); };
     const handleTileClick = (r: number, c: number) => {
         if (gameState !== 'playing' || r !== currentRow) return;
         const bombIndex = Math.floor(Math.random() * COLS);
         const newHistory = [...history, { bomb: bombIndex, pick: c }];
         setHistory(newHistory);
-        if (c === bombIndex) setGameState('lost');
-        else if (currentRow === ROWS - 1) setGameState('won');
+        if (c === bombIndex) { setGameState('lost'); trackEvent('game_lose', { row: currentRow + 1 }); }
+        else if (currentRow === ROWS - 1) { setGameState('won'); trackEvent('game_win', { ticket_id: ticketId }); }
         else setCurrentRow(prev => prev + 1);
     };
     return (
@@ -1100,13 +1104,14 @@ const OraclePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang })
                 });
                 setBlobs(newBlobs);
                 setState('revealed');
+                trackEvent('oracle_revealed', { prediction: randomPred });
             }, 3000);
             return () => clearTimeout(timeout);
         }
     }, [state, t.predictions]);
 
     const handleAction = () => {
-        if (state === 'ready') setState('sipping');
+        if (state === 'ready') { setState('sipping'); trackEvent('oracle_start'); }
         else if (state === 'revealed') setState('ready');
     };
 
@@ -1230,7 +1235,7 @@ const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void; items: Produc
                                 <div key={index} className="flex gap-4"><div className="w-20 h-24 bg-zinc-100 dark:bg-zinc-800 overflow-hidden"><img src={item.img} className="w-full h-full object-cover" /></div><div className="flex-1"><div className="flex justify-between font-bold uppercase"><span>{item.name}</span><button onClick={() => onRemove(index)} className="text-red-500"><Trash2 size={16} /></button></div><PriceDisplay price={item.price} className="font-bold" /></div></div>
                             ))}
                         </div>
-                        {items.length > 0 && <div className="p-8 border-t border-current/10"><div className="flex justify-between text-2xl font-black uppercase mb-6"><span>{t.subtotal}</span><PriceDisplay price={`₾${total.toFixed(2)}`} /></div><button className="w-full py-4 bg-[#FF3B30] text-white font-black uppercase tracking-widest">{t.checkout}</button></div>}
+                        {items.length > 0 && <div className="p-8 border-t border-current/10"><div className="flex justify-between text-2xl font-black uppercase mb-6"><span>{t.subtotal}</span><PriceDisplay price={`₾${total.toFixed(2)}`} /></div><button onClick={() => trackEvent('checkout_click', { items_count: items.length, total: total.toFixed(2) })} className="w-full py-4 bg-[#FF3B30] text-white font-black uppercase tracking-widest">{t.checkout}</button></div>}
                     </motion.div>
                 </>
             )}
@@ -1249,17 +1254,17 @@ const App = () => {
   const [activeDrink, setActiveDrink] = useState<number | null>(null);
   const theme = isDark ? COLORS.dark : COLORS.light;
   const t = CONTENT[lang];
-  useEffect(() => { window.scrollTo(0, 0); }, [location.pathname]);
+  useEffect(() => { window.scrollTo(0, 0); gtag('event', 'page_view', { page_path: location.pathname }); }, [location.pathname]);
   return (
     <div className={`min-h-screen transition-colors duration-500 selection:bg-[#FF3B30] selection:text-white ${isDark ? 'dark' : ''} ${lang === 'en' ? 'font-en' : 'font-ge'}`} style={{ backgroundColor: theme.base, color: theme.text }}>
       <nav className="fixed top-0 left-0 w-full z-50 px-6 py-6 md:px-12 flex items-center justify-between backdrop-blur-sm">
         <div className="flex-1"><button onClick={() => setIsMenuOpen(true)} className="hover:opacity-60 transition-opacity"><div className="space-y-1"><span className={`block w-5 h-0.5 ${isDark ? 'bg-white' : 'bg-black'}`}></span><span className={`block w-5 h-0.5 ${isDark ? 'bg-white' : 'bg-black'}`}></span></div></button></div>
         <div className="flex-1 flex justify-center"><button onClick={() => navigate('/')} className="text-xl font-black tracking-tighter uppercase"><span className="text-[#FF3B30]">YAM</span><span className="ml-1.5" style={{ color: isDark ? '#FFFFFF' : '#0A0A0A' }}>COFFEE</span></button></div>
         <div className="flex-1 flex items-center justify-end gap-5">
-          <button onClick={() => setLang(l => l === 'en' ? 'ge' : 'en')} className="text-xs font-black tracking-widest uppercase border border-current px-2 py-0.5 rounded hover:bg-[#FF3B30] hover:text-white hover:border-[#FF3B30] transition-all">
+          <button onClick={() => { const next = lang === 'en' ? 'ge' : 'en'; setLang(next as Lang); trackEvent('language_switch', { language: next }); }} className="text-xs font-black tracking-widest uppercase border border-current px-2 py-0.5 rounded hover:bg-[#FF3B30] hover:text-white hover:border-[#FF3B30] transition-all">
             {lang === 'en' ? 'GE' : 'EN'}
           </button>
-          <button onClick={() => setIsDark(!isDark)} className="opacity-70 hover:opacity-100 transition-opacity">{isDark ? <Sun size={18} /> : <Moon size={18} />}</button>
+          <button onClick={() => { setIsDark(!isDark); trackEvent('theme_toggle', { theme: isDark ? 'light' : 'dark' }); }} className="opacity-70 hover:opacity-100 transition-opacity">{isDark ? <Sun size={18} /> : <Moon size={18} />}</button>
           {location.pathname === '/shop' && cartItems.length > 0 && <div onClick={() => setIsCartOpen(true)} className="relative cursor-pointer"><ShoppingCart size={20} /><span className="absolute -top-2 -right-2 bg-[#FF3B30] text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{cartItems.length}</span></div>}
         </div>
       </nav>
@@ -1268,7 +1273,7 @@ const App = () => {
         {isMenuOpen && (
           <><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} onClick={() => setIsMenuOpen(false)} className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60]" /><motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'tween', duration: 0.55, ease: [0.32, 0.72, 0, 1] }} className="fixed top-0 left-0 h-full w-full max-w-sm z-[70] p-12 flex flex-col" style={{ backgroundColor: theme.base }}><button onClick={() => setIsMenuOpen(false)} className="self-end mb-6 p-2"><X size={28} /></button><div className="flex flex-col gap-2">
             {[ { name: t.nav.home, path: '/' }, { name: t.nav.brand, path: '/brand' }, { name: t.nav.menu, path: '/menu', disabled: true }, { name: t.nav.shop, path: '/shop' }, { name: t.nav.game, path: '/game' }, { name: t.nav.oracle, path: '/oracle' } ].map((item) => (
-                <button key={item.path} onClick={item.disabled ? undefined : () => { navigate(item.path); setIsMenuOpen(false); }} className={`text-[2.7rem] font-black text-left transition-all tracking-tighter leading-none whitespace-nowrap ${item.disabled ? 'cursor-default' : `hover:text-[#FF3B30] ${location.pathname === item.path ? 'text-[#FF3B30]' : ''}`}`}>{item.name}{item.disabled && <span className="ml-2 text-[0.55rem] font-normal italic tracking-wide" style={{ verticalAlign: 'baseline', color: '#FF3B30' }}>Coming soon</span>}</button>
+                <button key={item.path} onClick={item.disabled ? undefined : () => { navigate(item.path); setIsMenuOpen(false); trackEvent('nav_click', { page: item.path }); }} className={`text-[2.7rem] font-black text-left transition-all tracking-tighter leading-none whitespace-nowrap ${item.disabled ? 'cursor-default' : `hover:text-[#FF3B30] ${location.pathname === item.path ? 'text-[#FF3B30]' : ''}`}`}>{item.name}{item.disabled && <span className="ml-2 text-[0.55rem] font-normal italic tracking-wide" style={{ verticalAlign: 'baseline', color: '#FF3B30' }}>Coming soon</span>}</button>
             ))}
           </div></motion.div></>
         )}
@@ -1280,7 +1285,7 @@ const App = () => {
               <section className="pt-44 pb-20 px-6 md:px-12 flex flex-col items-center text-center">
                 <span className="text-[#FF3B30] font-bold tracking-[0.2em] text-[10px] mb-8 uppercase">{t.hero.since}</span>
                 <h1 className="text-6xl md:text-[7.5rem] lg:text-[9.5rem] font-black leading-[0.9] tracking-tighter mb-12 uppercase">{t.hero.title_1} <br /> {t.hero.title_2} <br /> {t.hero.title_3} <span className="text-[#FF3B30]">YAM.</span></h1>
-                <motion.button whileHover={{ scale: 1.05 }} onClick={() => document.getElementById('todays-brew')?.scrollIntoView({ behavior: 'smooth' })} className="bg-[#FF3B30] text-white px-12 py-5 rounded-full text-sm font-black tracking-widest uppercase shadow-xl">{t.hero.cta}</motion.button>
+                <motion.button whileHover={{ scale: 1.05 }} onClick={() => { document.getElementById('todays-brew')?.scrollIntoView({ behavior: 'smooth' }); trackEvent('cta_click', { button: 'hero_explore' }); }} className="bg-[#FF3B30] text-white px-12 py-5 rounded-full text-sm font-black tracking-widest uppercase shadow-xl">{t.hero.cta}</motion.button>
                 <div className="mt-28 w-full max-w-5xl aspect-video rounded-[40px] overflow-hidden shadow-2xl"><img src="/images/hero.jpg" className="w-full h-full object-cover" alt="Coffee" /></div>
               </section>
 
@@ -1399,7 +1404,7 @@ const App = () => {
                           {t.home.bring_home} <br/> <span className="text-[#FF3B30]">{t.home.bring_home_accent}</span>
                        </h3>
                        <button 
-                          onClick={() => navigate('/shop')}
+                          onClick={() => { navigate('/shop'); trackEvent('cta_click', { button: 'view_apparel' }); }}
                           className="hidden md:flex items-center gap-2 font-bold uppercase tracking-widest text-xs hover:text-[#FF3B30] transition-colors"
                        >
                           {t.home.view_apparel} <ArrowUpRight size={16} />
@@ -1424,7 +1429,7 @@ const App = () => {
                        ))}
                     </div>
                     <button 
-                        onClick={() => navigate('/shop')}
+                        onClick={() => { navigate('/shop'); trackEvent('cta_click', { button: 'view_apparel' }); }}
                         className="md:hidden mt-10 w-full py-4 border border-current rounded-full font-bold uppercase tracking-widest text-xs"
                     >
                           {t.home.view_apparel}
