@@ -50,8 +50,8 @@ const CONTENT = {
             todays_brew: "Today's Brew",
             tea_title: "Tea",
             extra_title: "Extra",
-            bring_home: "Bring YAM",
-            bring_home_accent: "Home.",
+            bring_home: "Sip the",
+            bring_home_accent: "Best.",
             view_apparel: "View Apparel",
             visit: "Visit",
             visit_the: "The",
@@ -230,8 +230,8 @@ const CONTENT = {
             todays_brew: "დღის ყავა",
             tea_title: "ჩაი",
             extra_title: "დამატებით",
-            bring_home: "წაიღე YAM",
-            bring_home_accent: "სახლში.",
+            bring_home: "დალიე",
+            bring_home_accent: "საუკეთესო.",
             view_apparel: "ტანსაცმელი",
             visit: "ესტუმრე",
             visit_the: "",
@@ -462,14 +462,14 @@ const EXTRA_MENU_DATA = {
 
 const BEANS_products = {
   en: [
-    { id: 1, name: 'ETHIOPIA YIRGACHEFFE', note: 'Floral, Citrus, Light Body', img: '/images/beans/ethiopia.jpg' },
-    { id: 2, name: 'COLOMBIA SUPREMO', note: 'Caramel, Nutty, Balanced', img: '/images/beans/colombia.jpg' },
-    { id: 3, name: 'YAM HOUSE BLEND', note: 'Dark Chocolate, Berry, Bold', img: '/images/beans/house-blend.jpg' },
+    { id: 1, name: 'YAM SPECIAL', note: 'Honey-infused cold brew & sea salt.', img: '/images/drinks/yam-special.jpg' },
+    { id: 2, name: 'SILKY FLAT WHITE', note: 'Micro-foam over double ristretto.', img: '/images/drinks/flat-white.jpg' },
+    { id: 3, name: 'BATCH BREW', note: 'Ethiopia, floral & light body.', img: '/images/drinks/batch-brew.jpg' },
   ],
   ge: [
-    { id: 1, name: 'ეთიოპია ირგაჩეფე', note: 'ყვავილოვანი, ციტრუსი, მსუბუქი სხეული', img: '/images/beans/ethiopia.jpg' },
-    { id: 2, name: 'კოლუმბია სუპრემო', note: 'კარამელი, თხილეული, დაბალანსებული', img: '/images/beans/colombia.jpg' },
-    { id: 3, name: 'YAM ჰაუს ბლენდი', note: 'მუქი შოკოლადი, კენკრა, მკვეთრი', img: '/images/beans/house-blend.jpg' },
+    { id: 1, name: 'YAM სპეშალი', note: 'თაფლიანი ქოლდ ბრიუ და ზღვის მარილი.', img: '/images/drinks/yam-special.jpg' },
+    { id: 2, name: 'სილქი ფლეთ უაითი', note: 'მიკრო-ქაფი ორმაგ რისტრეტოზე.', img: '/images/drinks/flat-white.jpg' },
+    { id: 3, name: 'ბეჩ ბრიუ', note: 'ეთიოპია, ყვავილოვანი და მსუბუქი.', img: '/images/drinks/batch-brew.jpg' },
   ]
 };
 
