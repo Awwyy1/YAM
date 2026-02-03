@@ -634,7 +634,7 @@ const ShopPage: React.FC<{ isDark: boolean; addToCart: (item: Product) => void; 
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {items.map((item) => (
                         <div key={item.id} className={`group ${item.comingSoon ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
-                            <div className="relative aspect-[3/4] mb-6 overflow-hidden bg-zinc-100 dark:bg-zinc-900">
+                            <div className="relative aspect-[3/4] mb-6 overflow-hidden bg-zinc-100 dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800">
                                 {item.comingSoon ? (
                                     <>
                                         <img src={item.img} alt={item.name} className="w-full h-full object-cover filter blur-xl opacity-50 scale-110" />
