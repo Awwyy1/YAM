@@ -45,7 +45,7 @@ export default async function handler(req: Request) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-20250514',
+        model: 'claude-3-haiku-20240307',
         max_tokens: 100,
         temperature: 1.0,
         system: SYSTEM_PROMPT,
@@ -69,7 +69,7 @@ export default async function handler(req: Request) {
       });
     }
 
-    return new Response(JSON.stringify({ prediction, ...(isDebug ? { debug: true, model: 'claude-haiku-4-20250514', lang } : {}) }), {
+    return new Response(JSON.stringify({ prediction, ...(isDebug ? { debug: true, model: 'claude-3-haiku-20240307', lang } : {}) }), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (e: any) {
