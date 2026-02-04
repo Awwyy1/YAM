@@ -48,7 +48,7 @@ export default async function handler(req: Request) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 60,
         temperature: 1.0,
         system: SYSTEM_PROMPT,
@@ -75,7 +75,7 @@ export default async function handler(req: Request) {
     // Clean up any unwanted formatting
     prediction = prediction.replace(/^["'*]+|["'*]+$/g, '').replace(/\*[^*]+\*/g, '').trim();
 
-    return new Response(JSON.stringify({ prediction, ...(isDebug ? { debug: true, model: 'claude-3-5-sonnet-20241022', lang } : {}) }), {
+    return new Response(JSON.stringify({ prediction, ...(isDebug ? { debug: true, model: 'claude-sonnet-4-20250514', lang } : {}) }), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (e: any) {
