@@ -1,21 +1,24 @@
 export const config = { runtime: 'edge' };
 
-const SYSTEM_PROMPT = `You are the YAM Coffee Oracle — a mystical, poetic fortune teller who reads coffee grounds.
+const SYSTEM_PROMPT = `You are a coffee fortune teller. Output ONLY the prediction text — nothing else.
 
-Rules:
-- Give exactly ONE prediction, 1-2 sentences max
-- Tone: warm, mysterious, slightly poetic — like a wise barista who's seen it all
-- Weave coffee metaphors naturally (brewing, bitterness, sweetness, steam, warmth, grounds, cups, mornings)
-- Cover life themes: love, courage, change, patience, opportunity, self-discovery
-- Never be generic. Each prediction must feel personal and specific
-- Never mention AI, technology, or that you are a program
-- End with a subtle sense of hope or action
-- Language: respond in the SAME language as the user's request
+STRICT RULES:
+- Maximum 1-2 sentences. Never exceed 30 words total.
+- No roleplay, no asterisks, no stage directions, no "I see...", no "Ah..."
+- No markdown, no quotes, no formatting
+- Just the prediction itself — plain text
+- Use coffee metaphors (brew, grounds, steam, bitter, sweet, cup, roast, sip)
+- Be poetic, mysterious, specific — like a fortune cookie but with soul
+- If user writes in Georgian, respond in Georgian
 
-Examples of the vibe:
-- "The bitterness you tasted last week is already fading — what's brewing now will be sweeter than you expect."
-- "Someone is thinking of you right now, the way steam rises from a fresh cup — quietly, but with warmth."
-- "Stop stirring the same worry. Set down the spoon. The answer is already at the bottom of your cup."`;
+GOOD examples:
+The grounds never lie — what felt bitter yesterday is already turning sweet.
+Someone will knock twice. The first time you'll hesitate. The second time, open the door.
+Your next bold move is already brewing. Trust the warmth rising in your chest.
+
+BAD examples (NEVER do this):
+*peers into cup* Ah, I see a journey... (TOO LONG, has roleplay)
+The coffee grounds reveal that you are on a path of discovery where... (TOO LONG, too generic)`;
 
 export default async function handler(req: Request) {
   const isDebug = req.method === 'GET';
@@ -33,8 +36,8 @@ export default async function handler(req: Request) {
   }
 
   const userPrompt = lang === 'ge'
-    ? 'წაიკითხე ჩემი ყავის ნალექი და მითხარი ჩემი ბედი. უპასუხე ქართულად.'
-    : 'Read my coffee grounds and tell me my fortune.';
+    ? 'მითხარი ჩემი ბედი. ქართულად, 1-2 წინადადება მაქსიმუმ.'
+    : 'Tell me my fortune. 1-2 sentences max.';
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -45,8 +48,8 @@ export default async function handler(req: Request) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307',
-        max_tokens: 100,
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 60,
         temperature: 1.0,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
@@ -61,7 +64,7 @@ export default async function handler(req: Request) {
     }
 
     const data = await res.json();
-    const prediction = data.content?.[0]?.text?.trim();
+    let prediction = data.content?.[0]?.text?.trim();
 
     if (!prediction) {
       return new Response(JSON.stringify({ error: 'Empty response', raw: data }), {
@@ -69,7 +72,10 @@ export default async function handler(req: Request) {
       });
     }
 
-    return new Response(JSON.stringify({ prediction, ...(isDebug ? { debug: true, model: 'claude-3-haiku-20240307', lang } : {}) }), {
+    // Clean up any unwanted formatting
+    prediction = prediction.replace(/^["'*]+|["'*]+$/g, '').replace(/\*[^*]+\*/g, '').trim();
+
+    return new Response(JSON.stringify({ prediction, ...(isDebug ? { debug: true, model: 'claude-3-5-sonnet-20241022', lang } : {}) }), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (e: any) {
