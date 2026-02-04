@@ -18,12 +18,11 @@ Examples of the vibe:
 - "Stop stirring the same worry. Set down the spoon. The answer is already at the bottom of your cup."`;
 
 export default async function handler(req: Request) {
-  // GET = diagnostic mode (open in browser to debug)
   const isDebug = req.method === 'GET';
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'API key not configured', hint: 'Set GEMINI_API_KEY in Vercel Environment Variables' }), {
+    return new Response(JSON.stringify({ error: 'API key not configured', hint: 'Set ANTHROPIC_API_KEY in Vercel Environment Variables' }), {
       status: 500, headers: { 'Content-Type': 'application/json' },
     });
   }
@@ -38,41 +37,39 @@ export default async function handler(req: Request) {
     : 'Read my coffee grounds and tell me my fortune.';
 
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            { role: 'user', parts: [{ text: SYSTEM_PROMPT + '\n\n' + userPrompt }] }
-          ],
-          generationConfig: {
-            temperature: 1.0,
-            maxOutputTokens: 100,
-            topP: 0.95,
-          },
-        }),
-      }
-    );
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-20250514',
+        max_tokens: 100,
+        temperature: 1.0,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+    });
 
     if (!res.ok) {
       const err = await res.text();
-      return new Response(JSON.stringify({ error: 'Gemini API error', gemini_status: res.status, details: err, key_preview: apiKey.substring(0, 8) + '...' }), {
+      return new Response(JSON.stringify({ error: 'Claude API error', status: res.status, details: err }), {
         status: 502, headers: { 'Content-Type': 'application/json' },
       });
     }
 
     const data = await res.json();
-    const prediction = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    const prediction = data.content?.[0]?.text?.trim();
 
     if (!prediction) {
-      return new Response(JSON.stringify({ error: 'Empty response from model', raw: data }), {
+      return new Response(JSON.stringify({ error: 'Empty response', raw: data }), {
         status: 502, headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    return new Response(JSON.stringify({ prediction, ...(isDebug ? { debug: true, lang } : {}) }), {
+    return new Response(JSON.stringify({ prediction, ...(isDebug ? { debug: true, model: 'claude-haiku-4-20250514', lang } : {}) }), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (e: any) {
