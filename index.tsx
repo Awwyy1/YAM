@@ -64,16 +64,18 @@ const CONTENT = {
             desc_visit: "Experience the full sensory immersion of Yam Coffee at our flagship roastery and cafe."
         },
         brand: {
-            manifesto_label: "Manifesto",
-            title_1: "BEYOND THE",
-            title_accent: "BEAN.",
-            desc: "YAM is not just coffee. It's an obsession with quality and a tribute to organic roots. We source directly from farmers who treat their land with respect.",
-            founded: "Founded",
-            sourcing: "Sourcing",
+            manifesto_label: "",
+            title_1: "HEY, IT'S",
+            title_accent: "YAM.",
+            desc: "We opened in 2026 because we wanted a spot to hang out ourselves. Turns out, other people wanted that too. Now we make coffee and try not to overthink it.",
+            stat1: "2026",
+            stat1_label: "BORN",
+            stat2: "BATUMI",
+            stat2_label: "BASED",
             features: [
-                 { title: 'Organic', text: 'Pure, chemical-free process from soil to cup.' },
-                 { title: 'Roast', text: 'Small-batch roasting for maximum flavor clarity.' },
-                 { title: 'Impact', text: 'Sustainably grown, ethically sourced, globally loved.' },
+                 { title: 'Friendly', text: 'We like people. Even before the first cup.' },
+                 { title: 'Honest', text: 'Good beans. Fair prices. No gimmicks.' },
+                 { title: 'Open', text: 'Walk in as a stranger, leave as a regular.' },
             ]
         },
         menu: {
@@ -245,16 +247,18 @@ const CONTENT = {
             desc_visit: "გამოცადე Yam Coffee-ს სრული არომატი ჩვენს მთავარ სამწვავსა და კაფეში."
         },
         brand: {
-            manifesto_label: "მანიფესტი",
-            title_1: "მარცვლის",
-            title_accent: "მიღმა.",
-            desc: "YAM უბრალოდ ყავა არ არის. ეს არის ხარისხისადმი სწრაფვა და პატივისცემა ორგანული ფესვებისადმი. ჩვენ მარცვლებს პირდაპირ ფერმერებისგან ვიღებთ.",
-            founded: "დაარსდა",
-            sourcing: "წყარო",
+            manifesto_label: "",
+            title_1: "გაიცანი",
+            title_accent: "YAM.",
+            desc: "ჩვენ 2026 წელს გავხსენით, რადგან თავად გვინდოდა ადგილი სადაც გავატარებდით დროს. აღმოჩნდა, სხვებსაც იგივე უნდოდათ. ახლა ყავას ვამზადებთ და ვცდილობთ ზედმეტად არ გადავაჭარბოთ.",
+            stat1: "2026",
+            stat1_label: "დაბადება",
+            stat2: "ბათუმი",
+            stat2_label: "ბაზა",
             features: [
-                 { title: 'ორგანული', text: 'სუფთა, ქიმიკატების გარეშე, ნიადაგიდან ჭიქამდე.' },
-                 { title: 'მოხალვა', text: 'მცირე პარტიებად მოხალვა მაქსიმალური გემოსთვის.' },
-                 { title: 'გავლენა', text: 'მდგრადი მოყვანა, ეთიკური მოპოვება.' },
+                 { title: 'მეგობრული', text: 'ხალხი გვიყვარს. პირველ ჭიქამდეც კი.' },
+                 { title: 'გულწრფელი', text: 'კარგი მარცვალი. სამართლიანი ფასი. ხრიკების გარეშე.' },
+                 { title: 'ღია', text: 'უცნობად შემოდიხარ, მუდმივ სტუმრად მიდიხარ.' },
             ]
         },
         menu: {
@@ -563,12 +567,12 @@ const BrandPage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) 
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-40 pb-20 px-6 md:px-12 max-w-7xl mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
         <motion.div initial={{ x: -30, opacity: 0 }} whileInView={{ x: 0, opacity: 1 }} viewport={{ once: true }}>
-          <span className="text-[#FF3B30] font-bold tracking-widest text-sm uppercase mb-4 block">{t.manifesto_label}</span>
+          {t.manifesto_label && <span className="text-[#FF3B30] font-bold tracking-widest text-sm uppercase mb-4 block">{t.manifesto_label}</span>}
           <h2 className="text-6xl md:text-8xl font-black tracking-tighter leading-none mb-8 uppercase">{t.title_1} <br /> <span className="text-[#FF3B30]">{t.title_accent}</span></h2>
           <p className="text-xl opacity-70 leading-relaxed mb-10 max-w-lg">{t.desc}</p>
           <div className="flex gap-10">
-            <div><p className="text-4xl font-black mb-1">2026</p><p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">{t.founded}</p></div>
-            <div><p className="text-4xl font-black mb-1">Direct</p><p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">{t.sourcing}</p></div>
+            <div><p className="text-4xl font-black mb-1">{t.stat1}</p><p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">{t.stat1_label}</p></div>
+            <div><p className="text-4xl font-black mb-1">{t.stat2}</p><p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">{t.stat2_label}</p></div>
           </div>
         </motion.div>
         <div className="rounded-[40px] overflow-hidden aspect-[4/5] shadow-xl">
@@ -578,7 +582,7 @@ const BrandPage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {t.features.map((item, i) => (
           <div key={i} className="p-10 rounded-[30px]" style={{ backgroundColor: theme.card }}>
-            <div className="text-[#FF3B30] mb-6">{i === 0 && <Leaf />}{i === 1 && <Coffee />}{i === 2 && <Globe />}</div>
+            <div className="text-[#FF3B30] mb-6">{i === 0 && <Heart />}{i === 1 && <Check />}{i === 2 && <Coffee />}</div>
             <h4 className="text-2xl font-black uppercase">{item.title}</h4>
             <p className="opacity-60">{item.text}</p>
           </div>
