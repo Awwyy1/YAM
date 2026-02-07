@@ -609,14 +609,11 @@ const MenuPage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) =
             {categories.map((category, idx) => (
                 <div key={idx}>
                     <h3 className="text-3xl font-black uppercase mb-8 pb-4 border-b border-current opacity-80 flex items-center gap-4">{category.title}</h3>
-                    <div className="space-y-8">
+                    <div className="space-y-4">
                         {category.items.map((item, i) => (
-                            <div key={i} className="group flex justify-between items-baseline cursor-default">
-                                <div>
-                                    <h4 className="text-xl font-bold uppercase group-hover:text-[#FF3B30] transition-colors duration-300">{item.name}</h4>
-                                    <p className="text-sm opacity-50 mt-1">{item.desc}</p>
-                                </div>
-                                <PriceDisplay price={item.price} className="text-xl font-bold tabular-nums" />
+                            <div key={i} className="group flex justify-between items-center cursor-default">
+                                <h4 className="text-lg font-bold uppercase group-hover:text-[#FF3B30] transition-colors duration-300">{item.name}</h4>
+                                <PriceDisplay price={item.price} className="text-lg font-bold tabular-nums" />
                             </div>
                         ))}
                     </div>
@@ -1408,18 +1405,13 @@ const App = () => {
                 </h3>
                 <div className="flex flex-col gap-4">
                   {COFFEE_MENU_DATA[lang].map((item, idx) => (
-                    <motion.div 
+                    <motion.div
                         key={idx}
                         onClick={() => setActiveDrink(idx)}
-                        className={`flex justify-between items-start pb-3 border-b border-current/10 cursor-pointer transition-colors duration-300 ${activeDrink === idx ? 'text-[#FF3B30]' : 'hover:text-[#FF3B30]'}`}
+                        className={`flex justify-between items-center pb-2 border-b border-current/10 cursor-pointer transition-colors duration-300 ${activeDrink === idx ? 'text-[#FF3B30]' : 'hover:text-[#FF3B30]'}`}
                     >
-                      <div className="flex flex-col gap-0 text-left w-full">
-                        <div className="flex justify-between items-baseline">
-                          <span className="text-[1.45rem] md:text-[2rem] font-black uppercase leading-none">{item.name}</span>
-                          <PriceDisplay price={item.price} className="text-[1.35rem] md:text-[1.7rem] font-black" />
-                        </div>
-                        <span className="text-sm font-medium opacity-50">{item.desc}</span>
-                      </div>
+                      <span className="text-[1.3rem] md:text-[1.8rem] font-black uppercase leading-none">{item.name}</span>
+                      <PriceDisplay price={item.price} className="text-[1.35rem] md:text-[1.7rem] font-black" />
                     </motion.div>
                   ))}
                 </div>
@@ -1433,15 +1425,10 @@ const App = () => {
                   {TEA_MENU_DATA[lang].map((item, idx) => (
                     <motion.div
                         key={`tea-${idx}`}
-                        className="flex justify-between items-start pb-3 border-b border-current/10 transition-colors duration-300 hover:text-[#FF3B30]"
+                        className="flex justify-between items-center pb-2 border-b border-current/10 transition-colors duration-300 hover:text-[#FF3B30]"
                     >
-                      <div className="flex flex-col gap-0 text-left w-full">
-                        <div className="flex justify-between items-baseline">
-                          <span className="text-[1.45rem] md:text-[2rem] font-black uppercase leading-none">{item.name}</span>
-                          <PriceDisplay price={item.price} className="text-[1.35rem] md:text-[1.7rem] font-black" />
-                        </div>
-                        <span className="text-sm font-medium opacity-50">{item.desc}</span>
-                      </div>
+                      <span className="text-[1.3rem] md:text-[1.8rem] font-black uppercase leading-none">{item.name}</span>
+                      <PriceDisplay price={item.price} className="text-[1.35rem] md:text-[1.7rem] font-black" />
                     </motion.div>
                   ))}
                 </div>
@@ -1455,15 +1442,10 @@ const App = () => {
                   {EXTRA_MENU_DATA[lang].map((item, idx) => (
                     <motion.div
                         key={`extra-${idx}`}
-                        className="flex justify-between items-start pb-3 border-b border-current/10 transition-colors duration-300 hover:text-[#FF3B30]"
+                        className="flex justify-between items-center pb-2 border-b border-current/10 transition-colors duration-300 hover:text-[#FF3B30]"
                     >
-                      <div className="flex flex-col gap-0 text-left w-full">
-                        <div className="flex justify-between items-baseline">
-                          <span className="text-[1.45rem] md:text-[2rem] font-black uppercase leading-none">{item.name}</span>
-                          <PriceDisplay price={item.price} className="text-[1.35rem] md:text-[1.7rem] font-black" />
-                        </div>
-                        <span className="text-sm font-medium opacity-50">{item.desc}</span>
-                      </div>
+                      <span className="text-[1.3rem] md:text-[1.8rem] font-black uppercase leading-none">{item.name}</span>
+                      <PriceDisplay price={item.price} className="text-[1.35rem] md:text-[1.7rem] font-black" />
                     </motion.div>
                   ))}
                 </div>
