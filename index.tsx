@@ -471,14 +471,14 @@ const EXTRA_MENU_DATA = {
 
 const BEANS_products = {
   en: [
-    { id: 1, name: 'YAM SPECIAL', note: 'Honey-infused cold brew & sea salt.', img: '/images/drinks/yam-special.jpg' },
-    { id: 2, name: 'SILKY FLAT WHITE', note: 'Micro-foam over double ristretto.', img: '/images/drinks/flat-white.jpg' },
-    { id: 3, name: 'BATCH BREW', note: 'Ethiopia, floral & light body.', img: '/images/drinks/batch-brew.jpg' },
+    { id: 1, name: 'YAM SPECIAL', note: 'Honey-infused cold brew & sea salt.', img: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&q=80' },
+    { id: 2, name: 'SILKY FLAT WHITE', note: 'Micro-foam over double ristretto.', img: 'https://images.unsplash.com/photo-1534778101976-62847782c213?w=800&q=80' },
+    { id: 3, name: 'BATCH BREW', note: 'Ethiopia, floral & light body.', img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80' },
   ],
   ge: [
-    { id: 1, name: 'YAM სპეშალი', note: 'თაფლიანი ქოლდ ბრიუ და ზღვის მარილი.', img: '/images/drinks/yam-special.jpg' },
-    { id: 2, name: 'სილქი ფლეთ უაითი', note: 'მიკრო-ქაფი ორმაგ რისტრეტოზე.', img: '/images/drinks/flat-white.jpg' },
-    { id: 3, name: 'ბეჩ ბრიუ', note: 'ეთიოპია, ყვავილოვანი და მსუბუქი.', img: '/images/drinks/batch-brew.jpg' },
+    { id: 1, name: 'YAM სპეშალი', note: 'თაფლიანი ქოლდ ბრიუ და ზღვის მარილი.', img: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&q=80' },
+    { id: 2, name: 'სილქი ფლეთ უაითი', note: 'მიკრო-ქაფი ორმაგ რისტრეტოზე.', img: 'https://images.unsplash.com/photo-1534778101976-62847782c213?w=800&q=80' },
+    { id: 3, name: 'ბეჩ ბრიუ', note: 'ეთიოპია, ყვავილოვანი და მსუბუქი.', img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80' },
   ]
 };
 
@@ -521,16 +521,16 @@ const FULL_MENU_CATEGORIES = {
 
 const MERCH_ITEMS = {
     en: [
-        { id: 101, name: "YAM ARCHIVE TEE", color: "BLAZE ORANGE", price: "₾45.00", img: "/images/merch/tee-orange.jpg", desc: "Heavyweight cotton with puff print logo.", comingSoon: true },
-        { id: 102, name: "ABSTRACT NOIR", color: "MIDNIGHT BLACK", price: "₾50.00", img: "/images/merch/tee-noir.jpg", desc: "Oversized fit. Back abstract tonal print.", comingSoon: true },
-        { id: 103, name: "YAM HOODIE", color: "VOID", price: "₾85.00", img: "/images/merch/hoodie.jpg", comingSoon: true },
-        { id: 104, name: "CANVAS TOTE", color: "RAW", price: "₾25.00", img: "/images/merch/tote.jpg", comingSoon: true }
+        { id: 101, name: "YAM ARCHIVE TEE", color: "BLAZE ORANGE", price: "₾45.00", img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80", desc: "Heavyweight cotton with puff print logo.", comingSoon: true },
+        { id: 102, name: "ABSTRACT NOIR", color: "MIDNIGHT BLACK", price: "₾50.00", img: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&q=80", desc: "Oversized fit. Back abstract tonal print.", comingSoon: true },
+        { id: 103, name: "YAM HOODIE", color: "VOID", price: "₾85.00", img: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80", comingSoon: true },
+        { id: 104, name: "CANVAS TOTE", color: "RAW", price: "₾25.00", img: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&q=80", comingSoon: true }
     ],
     ge: [
-        { id: 101, name: "YAM არქივ TEE", color: "მკვეთრი ნარინჯისფერი", price: "₾45.00", img: "/images/merch/tee-orange.jpg", desc: "მძიმე ბამბა, მოცულობითი ლოგო.", comingSoon: true },
-        { id: 102, name: "აბსტრაქტ ნუარი", color: "შუაღამის შავი", price: "₾50.00", img: "/images/merch/tee-noir.jpg", desc: "ოვერსაიზ სტილი. აბსტრაქტული პრინტი ზურგზე.", comingSoon: true },
-        { id: 103, name: "YAM ჰუდი", color: "VOID", price: "₾85.00", img: "/images/merch/hoodie.jpg", comingSoon: true },
-        { id: 104, name: "ტილოს ჩანთა", color: "RAW", price: "₾25.00", img: "/images/merch/tote.jpg", comingSoon: true }
+        { id: 101, name: "YAM არქივ TEE", color: "მკვეთრი ნარინჯისფერი", price: "₾45.00", img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80", desc: "მძიმე ბამბა, მოცულობითი ლოგო.", comingSoon: true },
+        { id: 102, name: "აბსტრაქტ ნუარი", color: "შუაღამის შავი", price: "₾50.00", img: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&q=80", desc: "ოვერსაიზ სტილი. აბსტრაქტული პრინტი ზურგზე.", comingSoon: true },
+        { id: 103, name: "YAM ჰუდი", color: "VOID", price: "₾85.00", img: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80", comingSoon: true },
+        { id: 104, name: "ტილოს ჩანთა", color: "RAW", price: "₾25.00", img: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&q=80", comingSoon: true }
     ]
 };
 
@@ -579,7 +579,7 @@ const BrandPage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) 
           </div>
         </motion.div>
         <div className="rounded-[40px] overflow-hidden aspect-[4/5] shadow-xl">
-          <img src="/images/brand.jpg" className="w-full h-full object-cover" alt="Brand" />
+          <img src="https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=1200&q=80" className="w-full h-full object-cover" alt="Brand" />
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -789,12 +789,12 @@ const LogoPage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) =
                 <p className="text-xl opacity-60 max-w-2xl mb-16">{t.moodboard_desc}</p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {[
-                        { src: "/images/moodboard/mood-1.jpg", span: "row-span-2" },
-                        { src: "/images/moodboard/mood-2.jpg", span: "" },
-                        { src: "/images/moodboard/mood-3.jpg", span: "" },
-                        { src: "/images/moodboard/mood-4.jpg", span: "" },
-                        { src: "/images/moodboard/mood-5.jpg", span: "col-span-2 md:col-span-1" },
-                        { src: "/images/moodboard/mood-6.jpg", span: "hidden md:block" },
+                        { src: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80", span: "row-span-2" },
+                        { src: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80", span: "" },
+                        { src: "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=800&q=80", span: "" },
+                        { src: "https://images.unsplash.com/photo-1498804103079-a6351b050096?w=800&q=80", span: "" },
+                        { src: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&q=80", span: "col-span-2 md:col-span-1" },
+                        { src: "https://images.unsplash.com/photo-1453614512568-c4024d13c247?w=800&q=80", span: "hidden md:block" },
                     ].map((img, i) => (
                         <motion.div key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className={`overflow-hidden rounded-2xl ${img.span}`}>
                             <img src={img.src} alt="" className="w-full h-full object-cover aspect-square grayscale hover:grayscale-0 transition-all duration-700" />
@@ -812,9 +812,9 @@ const LogoPage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) =
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {t.photo_rules.map((rule, i) => {
                         const photos = [
-                            "/images/photo-style/style-1.jpg",
-                            "/images/photo-style/style-2.jpg",
-                            "/images/photo-style/style-3.jpg",
+                            "https://images.unsplash.com/photo-1511920170033-f8396924c348?w=800&q=80",
+                            "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80",
+                            "https://images.unsplash.com/photo-1485808191679-5f86510681a2?w=800&q=80",
                         ];
                         return (
                             <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }}>
@@ -1355,7 +1355,7 @@ const App = () => {
                 <span className="text-[#FF3B30] font-bold tracking-[0.2em] text-[10px] mb-8 uppercase">{t.hero.since}</span>
                 <h1 className="text-6xl md:text-[7.5rem] lg:text-[9.5rem] font-black leading-[0.9] tracking-tighter mb-12 uppercase">{t.hero.title_1} <br /> {t.hero.title_2} <br /> {t.hero.title_3} <span className="text-[#FF3B30]">YAM.</span></h1>
                 <motion.button whileHover={{ scale: 1.05 }} onClick={() => { document.getElementById('todays-brew')?.scrollIntoView({ behavior: 'smooth' }); trackEvent('cta_click', { button: 'hero_explore' }); }} className="bg-[#FF3B30] text-white px-12 py-5 rounded-full text-sm font-black tracking-widest uppercase shadow-xl">{t.hero.cta}</motion.button>
-                <div className="mt-28 w-full max-w-5xl aspect-video rounded-[40px] overflow-hidden shadow-2xl"><img src="/images/hero.jpg" className="w-full h-full object-cover" alt="Coffee" /></div>
+                <div className="mt-28 w-full max-w-5xl aspect-video rounded-[40px] overflow-hidden shadow-2xl"><img src="https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=1400&q=80" className="w-full h-full object-cover" alt="Coffee" /></div>
               </section>
 
               <section className="w-full overflow-hidden bg-[#FF3B30] py-5 -rotate-1 scale-[1.02] opacity-70" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%270 0 200 200%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.65%27 numOctaves=%273%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23n)%27 opacity=%270.15%27/%3E%3C/svg%3E")' }}>
