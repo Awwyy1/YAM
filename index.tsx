@@ -4,9 +4,44 @@ import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-ro
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, X, Instagram, Sun, Moon, Leaf, Coffee, Globe, ArrowUpRight, MapPin, Clock, Trash2, Gamepad2, Share2, Lock, Trophy, AlertCircle, Bomb, Type, Palette, Layout, Grid, Check, Sparkles, Eye, Camera, MessageSquare, Heart, RefreshCw } from 'lucide-react';
 
-declare global { interface Window { gtag: (...args: any[]) => void; } }
-const gtag = (...args: any[]) => { if (window.gtag) window.gtag(...args); };
-const trackEvent = (name: string, params?: Record<string, any>) => gtag('event', name, params);
+// GTM DataLayer integration
+declare global {
+  interface Window {
+    dataLayer: Record<string, any>[];
+  }
+}
+
+// Initialize dataLayer if not exists
+window.dataLayer = window.dataLayer || [];
+
+// Track custom events via GTM dataLayer
+const trackEvent = (eventName: string, params?: Record<string, any>) => {
+  // Skip tracking in development mode (optional - comment out if you want dev tracking)
+  if (import.meta.env.DEV) {
+    console.log('[GTM Event]', eventName, params);
+    return;
+  }
+
+  window.dataLayer.push({
+    event: eventName,
+    ...params,
+    timestamp: new Date().toISOString()
+  });
+};
+
+// Track page views (call on route change)
+const trackPageView = (pagePath: string, pageTitle?: string) => {
+  window.dataLayer.push({
+    event: 'page_view',
+    page_path: pagePath,
+    page_title: pageTitle || document.title
+  });
+};
+
+// For backwards compatibility with existing gtag calls
+const gtag = (...args: any[]) => {
+  window.dataLayer.push(args);
+};
 
 const COLORS = {
   light: {
@@ -1323,7 +1358,7 @@ const App = () => {
   const [activeDrink, setActiveDrink] = useState<number | null>(null);
   const theme = isDark ? COLORS.dark : COLORS.light;
   const t = CONTENT[lang];
-  useEffect(() => { window.scrollTo(0, 0); gtag('event', 'page_view', { page_path: location.pathname }); }, [location.pathname]);
+  useEffect(() => { window.scrollTo(0, 0); trackPageView(location.pathname); }, [location.pathname]);
   return (
     <div className={`min-h-screen transition-colors duration-500 selection:bg-[#FF3B30] selection:text-white ${isDark ? 'dark' : ''} ${lang === 'en' ? 'font-en' : 'font-ge'}`} style={{ backgroundColor: theme.base, color: theme.text }}>
       <nav className="fixed top-0 left-0 w-full z-50 px-6 py-6 md:px-12 flex items-center justify-between backdrop-blur-sm">
