@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, X, Instagram, Sun, Moon, Leaf, Coffee, Globe, ArrowUpRight, MapPin, Clock, Trash2, Gamepad2, Share2, Lock, Trophy, AlertCircle, Bomb, Type, Palette, Layout, Grid, Check, Sparkles, Eye, Camera, MessageSquare, Heart, RefreshCw } from 'lucide-react';
+import AdminPanel from './src/Admin';
 
 // GTM DataLayer integration
 declare global {
@@ -1359,6 +1360,12 @@ const App = () => {
   const theme = isDark ? COLORS.dark : COLORS.light;
   const t = CONTENT[lang];
   useEffect(() => { window.scrollTo(0, 0); trackPageView(location.pathname); }, [location.pathname]);
+
+  // Admin page - render without nav/footer
+  if (location.pathname === '/admin') {
+    return <AdminPanel />;
+  }
+
   return (
     <div className={`min-h-screen transition-colors duration-500 selection:bg-[#FF3B30] selection:text-white ${isDark ? 'dark' : ''} ${lang === 'en' ? 'font-en' : 'font-ge'}`} style={{ backgroundColor: theme.base, color: theme.text }}>
       <nav className="fixed top-0 left-0 w-full z-50 px-6 py-6 md:px-12 flex items-center justify-between backdrop-blur-sm">
