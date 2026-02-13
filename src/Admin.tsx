@@ -1,16 +1,269 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   loginAdmin,
   logoutAdmin,
   onAuthChange,
-  getMenuItems,
-  saveMenuItem,
-  deleteMenuItem,
-  initializeMenuData,
-  MenuItem
+  db,
+  storage
 } from './firebase';
+import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { User } from 'firebase/auth';
-import { LogOut, Plus, Trash2, Save, Coffee, Leaf, Cookie, Loader2, AlertCircle, Check } from 'lucide-react';
+import { LogOut, Plus, Trash2, Save, Coffee, Leaf, Cookie, Loader2, AlertCircle, Check, Image, ShoppingBag, Type, MapPin, Sparkles, Upload } from 'lucide-react';
+
+// Types
+interface MenuItem {
+  id: string;
+  name_en: string;
+  name_ge: string;
+  price: string;
+  desc_en: string;
+  desc_ge: string;
+  order: number;
+}
+
+interface DrinkItem {
+  id: string;
+  name_en: string;
+  name_ge: string;
+  note_en: string;
+  note_ge: string;
+  img: string;
+  order: number;
+}
+
+interface ShopItem {
+  id: string;
+  name_en: string;
+  name_ge: string;
+  color_en: string;
+  color_ge: string;
+  price: string;
+  img: string;
+  desc_en: string;
+  desc_ge: string;
+  comingSoon: boolean;
+  order: number;
+}
+
+interface HeroContent {
+  since_en: string;
+  since_ge: string;
+  title1_en: string;
+  title1_ge: string;
+  title2_en: string;
+  title2_ge: string;
+  title3_en: string;
+  title3_ge: string;
+  cta_en: string;
+  cta_ge: string;
+}
+
+interface ContactsContent {
+  location_en: string;
+  location_ge: string;
+  city_en: string;
+  city_ge: string;
+  hours_week_en: string;
+  hours_week_ge: string;
+  hours_weekend_en: string;
+  hours_weekend_ge: string;
+  visit_desc_en: string;
+  visit_desc_ge: string;
+}
+
+interface BrandContent {
+  title1_en: string;
+  title1_ge: string;
+  title_accent_en: string;
+  title_accent_ge: string;
+  desc_en: string;
+  desc_ge: string;
+  stat1: string;
+  stat1_label_en: string;
+  stat1_label_ge: string;
+  stat2: string;
+  stat2_label_en: string;
+  stat2_label_ge: string;
+  feature1_title_en: string;
+  feature1_title_ge: string;
+  feature1_text_en: string;
+  feature1_text_ge: string;
+  feature2_title_en: string;
+  feature2_title_ge: string;
+  feature2_text_en: string;
+  feature2_text_ge: string;
+  feature3_title_en: string;
+  feature3_title_ge: string;
+  feature3_text_en: string;
+  feature3_text_ge: string;
+}
+
+type Tab = 'menu' | 'drinks' | 'shop' | 'hero' | 'contacts' | 'brand';
+type MenuCategory = 'coffee' | 'tea' | 'extra';
+
+// Fallback data for initialization
+const INIT_COFFEE = [
+  { name_en: 'Espresso', name_ge: 'ესპრესო', price: '₾4.00', desc_en: 'Bold & intense signature blend', desc_ge: 'მკვეთრი და ინტენსიური ნაზავი' },
+  { name_en: 'Espresso Macchiato', name_ge: 'ესპრესო მაკიატო', price: '₾4.50', desc_en: 'Espresso with a dollop of foam', desc_ge: 'ესპრესო ქაფის წვეთით' },
+  { name_en: 'Americano', name_ge: 'ამერიკანო', price: '₾4.50', desc_en: 'Espresso with hot water', desc_ge: 'ესპრესო ცხელ წყალზე' },
+  { name_en: 'Americano + Milk', name_ge: 'ამერიკანო + რძე', price: '₾5.00', desc_en: 'Americano with steamed milk', desc_ge: 'ამერიკანო ცხელი რძით' },
+  { name_en: 'Cappuccino', name_ge: 'კაპუჩინო', price: '₾5.00', desc_en: 'Balanced espresso, milk and foam', desc_ge: 'ესპრესოსა და რძის ბალანსი' },
+  { name_en: 'Raf Coffee', name_ge: 'რაფ ყავა', price: '₾6.00', desc_en: 'Espresso, cream and vanilla sugar', desc_ge: 'ესპრესო, ნაღები და ვანილის შაქარი' },
+  { name_en: 'Latte Macchiato', name_ge: 'ლატე მაკიატო', price: '₾5.50', desc_en: 'Layered milk and espresso', desc_ge: 'რძის და ესპრესოს ფენები' },
+  { name_en: 'Matcha Latte', name_ge: 'მატჩა ლატე', price: '₾6.00', desc_en: 'Ceremonial grade matcha with steamed milk', desc_ge: 'მატჩა ცხელი რძით' },
+  { name_en: 'Cocoa', name_ge: 'კაკაო', price: '₾5.00', desc_en: 'Rich hot chocolate', desc_ge: 'მდიდარი ცხელი შოკოლადი' },
+  { name_en: 'Double Espresso', name_ge: 'ორმაგი ესპრესო', price: '₾5.50', desc_en: 'Two shots of signature blend', desc_ge: 'ორი შოთი საფირმო ნაზავით' },
+  { name_en: 'Double Espresso Macchiato', name_ge: 'ორმაგი ესპრესო მაკიატო', price: '₾6.00', desc_en: 'Double shot with foam', desc_ge: 'ორმაგი შოთი ქაფით' },
+  { name_en: 'Double Americano', name_ge: 'ორმაგი ამერიკანო', price: '₾6.00', desc_en: 'Double shot with hot water', desc_ge: 'ორმაგი შოთი წყალზე' },
+  { name_en: 'Double Americano + Milk', name_ge: 'ორმაგი ამერიკანო + რძე', price: '₾6.50', desc_en: 'Double americano with steamed milk', desc_ge: 'ორმაგი ამერიკანო რძით' },
+  { name_en: 'Double Cappuccino', name_ge: 'ორმაგი კაპუჩინო', price: '₾6.50', desc_en: 'Double shot cappuccino', desc_ge: 'ორმაგი კაპუჩინო' },
+];
+
+const INIT_TEA = [
+  { name_en: 'Green Tea', name_ge: 'მწვანე ჩაი', price: '₾3.50', desc_en: 'Classic Japanese sencha, light and grassy', desc_ge: 'კლასიკური იაპონური სენჩა' },
+  { name_en: 'Earl Grey', name_ge: 'ერლ გრეი', price: '₾3.50', desc_en: 'Black tea with Italian bergamot oil', desc_ge: 'შავი ჩაი ბერგამოტის ზეთით' },
+  { name_en: 'Matcha', name_ge: 'მატჩა', price: '₾5.00', desc_en: 'Ceremonial grade Japanese green tea powder', desc_ge: 'იაპონური მწვანე ჩაის ფხვნილი' },
+  { name_en: 'Jasmine Oolong', name_ge: 'ჟასმინის ოლონგი', price: '₾4.00', desc_en: 'Semi-oxidized leaves with jasmine blossoms', desc_ge: 'ნახევრად ფერმენტირებული ჟასმინით' },
+  { name_en: 'Fresh Mint', name_ge: 'ახალი პიტნა', price: '₾3.75', desc_en: 'Hand-picked garden mint, served hot', desc_ge: 'ბაღის პიტნა, ცხლად მიწოდებული' },
+];
+
+const INIT_EXTRA = [
+  { name_en: 'Croissant', name_ge: 'კრუასანი', price: '₾4.50', desc_en: 'French butter croissant, baked fresh daily', desc_ge: 'ფრანგული კარაქის კრუასანი, ყოველდღე ახალი' },
+  { name_en: 'Almond Croissant', name_ge: 'ნუშის კრუასანი', price: '₾5.50', desc_en: 'Filled with almond cream and toasted flakes', desc_ge: 'ნუშის კრემით და შემწვარი ფანტელებით' },
+  { name_en: 'Banana Bread', name_ge: 'ბანანის პური', price: '₾4.00', desc_en: 'Homemade with walnuts and dark chocolate', desc_ge: 'ნიგვზით და შავი შოკოლადით' },
+  { name_en: 'Cheesecake', name_ge: 'ჩიზქეიქი', price: '₾6.50', desc_en: 'New York style, creamy and dense', desc_ge: 'ნიუ-იორკის სტილი, კრემისებრი' },
+  { name_en: 'Cookie', name_ge: 'ქუქი', price: '₾3.00', desc_en: 'Chunky chocolate chip, soft center', desc_ge: 'შოკოლადის ნატეხებით, რბილი შუაგული' },
+  { name_en: 'Granola Bowl', name_ge: 'გრანოლა ბოულ', price: '₾7.00', desc_en: 'Greek yogurt, honey, seasonal fruits', desc_ge: 'ბერძნული იოგურტი, თაფლი, ხილი' },
+  { name_en: 'Avocado Toast', name_ge: 'ავოკადო ტოსტი', price: '₾8.50', desc_en: 'Sourdough, smashed avo, chili flakes, egg', desc_ge: 'სოურდო, ავოკადო, ჩილი, კვერცხი' },
+];
+
+const INIT_DRINKS = [
+  { name_en: 'YAM SPECIAL', name_ge: 'YAM სპეშალი', note_en: 'Honey-infused cold brew & sea salt.', note_ge: 'თაფლიანი ქოლდ ბრიუ და ზღვის მარილი.', img: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&q=80' },
+  { name_en: 'SILKY FLAT WHITE', name_ge: 'სილქი ფლეთ უაითი', note_en: 'Micro-foam over double ristretto.', note_ge: 'მიკრო-ქაფი ორმაგ რისტრეტოზე.', img: 'https://images.unsplash.com/photo-1534778101976-62847782c213?w=800&q=80' },
+  { name_en: 'BATCH BREW', name_ge: 'ბეჩ ბრიუ', note_en: 'Ethiopia, floral & light body.', note_ge: 'ეთიოპია, ყვავილოვანი და მსუბუქი.', img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80' },
+];
+
+const INIT_SHOP = [
+  { name_en: 'YAM ARCHIVE TEE', name_ge: 'YAM არქივ TEE', color_en: 'BLAZE ORANGE', color_ge: 'მკვეთრი ნარინჯისფერი', price: '₾45.00', img: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80', desc_en: 'Heavyweight cotton with puff print logo.', desc_ge: 'მძიმე ბამბა, მოცულობითი ლოგო.', comingSoon: true },
+  { name_en: 'ABSTRACT NOIR', name_ge: 'აბსტრაქტ ნუარი', color_en: 'MIDNIGHT BLACK', color_ge: 'შუაღამის შავი', price: '₾50.00', img: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&q=80', desc_en: 'Oversized fit. Back abstract tonal print.', desc_ge: 'ოვერსაიზ სტილი. აბსტრაქტული პრინტი ზურგზე.', comingSoon: true },
+  { name_en: 'YAM HOODIE', name_ge: 'YAM ჰუდი', color_en: 'VOID', color_ge: 'VOID', price: '₾85.00', img: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80', desc_en: '', desc_ge: '', comingSoon: true },
+  { name_en: 'CANVAS TOTE', name_ge: 'ტილოს ჩანთა', color_en: 'RAW', color_ge: 'RAW', price: '₾25.00', img: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&q=80', desc_en: '', desc_ge: '', comingSoon: true },
+];
+
+const INIT_HERO: HeroContent = {
+  since_en: 'SINCE 2026',
+  since_ge: '2026 წლიდან',
+  title1_en: 'GOOD',
+  title1_ge: 'კარგი',
+  title2_en: 'MORNINGS',
+  title2_ge: 'დილა იწყება',
+  title3_en: 'START WITH',
+  title3_ge: '',
+  cta_en: "TODAY'S BREW",
+  cta_ge: 'დღის ყავა',
+};
+
+const INIT_CONTACTS: ContactsContent = {
+  location_en: 'Coming soon',
+  location_ge: 'მალე',
+  city_en: 'GE, Batumi',
+  city_ge: 'საქართველო, ბათუმი',
+  hours_week_en: 'Mon - Fri: 09:00 - 21:00',
+  hours_week_ge: 'ორშ - პარ: 09:00 - 21:00',
+  hours_weekend_en: 'Sat - Sun: 10:00 - 21:00',
+  hours_weekend_ge: 'შაბ - კვი: 10:00 - 21:00',
+  visit_desc_en: 'Experience the full sensory immersion of Yam Coffee at our flagship roastery and cafe.',
+  visit_desc_ge: 'განიცადეთ Yam Coffee-ს სრული სენსორული გამოცდილება ჩვენს ფლაგმან როსტერიასა და კაფეში.',
+};
+
+const INIT_BRAND: BrandContent = {
+  title1_en: "HEY, IT'S",
+  title1_ge: 'ჰეი, ეს არის',
+  title_accent_en: 'YAM.',
+  title_accent_ge: 'YAM.',
+  desc_en: "We opened in 2026 because we wanted a spot to hang out ourselves. Turns out, other people wanted that too. Now we make coffee and try not to overthink it.",
+  desc_ge: 'გავხსენით 2026-ში, რადგან გვინდოდა ადგილი სადაც თვითონ დავსხდებოდით. აღმოჩნდა, რომ სხვებსაც იგივე უნდოდათ. ახლა ვამზადებთ ყავას და ვცდილობთ არ გადავაჭარბოთ.',
+  stat1: '2026',
+  stat1_label_en: 'BORN',
+  stat1_label_ge: 'დაარსდა',
+  stat2: 'BATUMI',
+  stat2_label_en: 'BASED',
+  stat2_label_ge: 'მდებარეობა',
+  feature1_title_en: 'Friendly',
+  feature1_title_ge: 'მეგობრული',
+  feature1_text_en: 'We like people. Even before the first cup.',
+  feature1_text_ge: 'გვიყვარს ხალხი. პირველ ფინჯანამდეც კი.',
+  feature2_title_en: 'Honest',
+  feature2_title_ge: 'გულწრფელი',
+  feature2_text_en: 'Good beans. Fair prices. No gimmicks.',
+  feature2_text_ge: 'კარგი მარცვალი. სამართლიანი ფასი. ხრიკების გარეშე.',
+  feature3_title_en: 'Open',
+  feature3_title_ge: 'ღია',
+  feature3_text_en: 'Walk in as a stranger, leave as a regular.',
+  feature3_text_ge: 'შემოდი უცხოდ, წადი როგორც მუდმივი.',
+};
+
+// Image upload component
+const ImageUpload: React.FC<{
+  currentUrl: string;
+  onUpload: (url: string) => void;
+  folder: string;
+  id: string;
+}> = ({ currentUrl, onUpload, folder, id }) => {
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const storageRef = ref(storage, `${folder}/${id}_${Date.now()}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      onUpload(url);
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Failed to upload image');
+    }
+    setUploading(false);
+  };
+
+  return (
+    <div className="space-y-2">
+      <label className="text-xs text-gray-500 uppercase">Image</label>
+      <div className="flex gap-3 items-center">
+        {currentUrl && (
+          <img src={currentUrl} alt="" className="w-16 h-16 object-cover rounded" />
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleUpload}
+          className="hidden"
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="flex items-center gap-2 px-3 py-2 bg-[#0A0A0A] border border-gray-700 rounded text-sm hover:border-[#FF3B30] transition-colors disabled:opacity-50"
+        >
+          {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+          {uploading ? 'Uploading...' : 'Upload'}
+        </button>
+      </div>
+      <input
+        type="text"
+        value={currentUrl}
+        onChange={(e) => onUpload(e.target.value)}
+        placeholder="Or paste image URL..."
+        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white text-sm focus:outline-none focus:border-[#FF3B30]"
+      />
+    </div>
+  );
+};
 
 // Admin Panel Component
 const AdminPanel: React.FC = () => {
@@ -19,8 +272,17 @@ const AdminPanel: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [activeTab, setActiveTab] = useState<'coffee' | 'tea' | 'extra'>('coffee');
+
+  const [activeTab, setActiveTab] = useState<Tab>('menu');
+  const [menuCategory, setMenuCategory] = useState<MenuCategory>('coffee');
+
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [drinks, setDrinks] = useState<DrinkItem[]>([]);
+  const [shopItems, setShopItems] = useState<ShopItem[]>([]);
+  const [hero, setHero] = useState<HeroContent>(INIT_HERO);
+  const [contacts, setContacts] = useState<ContactsContent>(INIT_CONTACTS);
+  const [brand, setBrand] = useState<BrandContent>(INIT_BRAND);
+
   const [saving, setSaving] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
@@ -35,17 +297,45 @@ const AdminPanel: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      loadMenu(activeTab);
+      loadData();
     }
-  }, [user, activeTab]);
+  }, [user, activeTab, menuCategory]);
 
-  const loadMenu = async (category: string) => {
+  const loadData = async () => {
     try {
-      const items = await getMenuItems(category);
-      setMenuItems(items);
+      if (activeTab === 'menu') {
+        const snap = await getDocs(collection(db, `menu_${menuCategory}`));
+        const items: MenuItem[] = [];
+        snap.forEach((doc) => items.push({ id: doc.id, ...doc.data() } as MenuItem));
+        setMenuItems(items.sort((a, b) => a.order - b.order));
+      } else if (activeTab === 'drinks') {
+        const snap = await getDocs(collection(db, 'drinks'));
+        const items: DrinkItem[] = [];
+        snap.forEach((doc) => items.push({ id: doc.id, ...doc.data() } as DrinkItem));
+        setDrinks(items.sort((a, b) => a.order - b.order));
+      } else if (activeTab === 'shop') {
+        const snap = await getDocs(collection(db, 'shop'));
+        const items: ShopItem[] = [];
+        snap.forEach((doc) => items.push({ id: doc.id, ...doc.data() } as ShopItem));
+        setShopItems(items.sort((a, b) => a.order - b.order));
+      } else if (activeTab === 'hero') {
+        const snap = await getDocs(collection(db, 'content'));
+        snap.forEach((doc) => {
+          if (doc.id === 'hero') setHero(doc.data() as HeroContent);
+        });
+      } else if (activeTab === 'contacts') {
+        const snap = await getDocs(collection(db, 'content'));
+        snap.forEach((doc) => {
+          if (doc.id === 'contacts') setContacts(doc.data() as ContactsContent);
+        });
+      } else if (activeTab === 'brand') {
+        const snap = await getDocs(collection(db, 'content'));
+        snap.forEach((doc) => {
+          if (doc.id === 'brand') setBrand(doc.data() as BrandContent);
+        });
+      }
     } catch (error) {
-      console.error('Error loading menu:', error);
-      setMenuItems([]);
+      console.error('Error loading data:', error);
     }
   };
 
@@ -59,36 +349,44 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await logoutAdmin();
+  const showMessage = (type: 'success' | 'error', text: string) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage(null), 3000);
   };
 
-  const handleSaveItem = async (item: MenuItem) => {
+  // Menu handlers
+  const saveMenuItem = async (item: MenuItem) => {
     setSaving(item.id);
     try {
-      await saveMenuItem(activeTab, item);
+      await setDoc(doc(db, `menu_${menuCategory}`, item.id), {
+        name_en: item.name_en,
+        name_ge: item.name_ge,
+        price: item.price,
+        desc_en: item.desc_en,
+        desc_ge: item.desc_ge,
+        order: item.order
+      });
       showMessage('success', 'Saved!');
-      await loadMenu(activeTab);
     } catch (error: any) {
       showMessage('error', error.message);
     }
     setSaving(null);
   };
 
-  const handleDeleteItem = async (itemId: string) => {
+  const deleteMenuItem = async (id: string) => {
     if (!confirm('Delete this item?')) return;
     try {
-      await deleteMenuItem(activeTab, itemId);
+      await deleteDoc(doc(db, `menu_${menuCategory}`, id));
       showMessage('success', 'Deleted!');
-      await loadMenu(activeTab);
+      loadData();
     } catch (error: any) {
       showMessage('error', error.message);
     }
   };
 
-  const handleAddItem = () => {
+  const addMenuItem = () => {
     const newItem: MenuItem = {
-      id: `${activeTab}_${Date.now()}`,
+      id: `${menuCategory}_${Date.now()}`,
       name_en: 'New Item',
       name_ge: 'ახალი',
       price: '₾0.00',
@@ -99,93 +397,164 @@ const AdminPanel: React.FC = () => {
     setMenuItems([...menuItems, newItem]);
   };
 
-  const updateItem = (id: string, field: keyof MenuItem, value: string | number) => {
-    setMenuItems(items =>
-      items.map(item =>
-        item.id === id ? { ...item, [field]: value } : item
-      )
-    );
+  // Drink handlers
+  const saveDrink = async (item: DrinkItem) => {
+    setSaving(item.id);
+    try {
+      await setDoc(doc(db, 'drinks', item.id), {
+        name_en: item.name_en,
+        name_ge: item.name_ge,
+        note_en: item.note_en,
+        note_ge: item.note_ge,
+        img: item.img,
+        order: item.order
+      });
+      showMessage('success', 'Saved!');
+    } catch (error: any) {
+      showMessage('error', error.message);
+    }
+    setSaving(null);
   };
 
-  const showMessage = (type: 'success' | 'error', text: string) => {
-    setMessage({ type, text });
-    setTimeout(() => setMessage(null), 3000);
+  const deleteDrink = async (id: string) => {
+    if (!confirm('Delete this drink?')) return;
+    try {
+      await deleteDoc(doc(db, 'drinks', id));
+      showMessage('success', 'Deleted!');
+      loadData();
+    } catch (error: any) {
+      showMessage('error', error.message);
+    }
   };
 
-  // Initialize data from hardcoded menu (one-time use)
-  const handleInitializeData = async () => {
-    if (!confirm('This will populate Firestore with the current menu data. Continue?')) return;
+  const addDrink = () => {
+    const newItem: DrinkItem = {
+      id: `drink_${Date.now()}`,
+      name_en: 'New Drink',
+      name_ge: 'ახალი სასმელი',
+      note_en: 'Description',
+      note_ge: 'აღწერა',
+      img: '',
+      order: drinks.length
+    };
+    setDrinks([...drinks, newItem]);
+  };
+
+  // Shop handlers
+  const saveShopItem = async (item: ShopItem) => {
+    setSaving(item.id);
+    try {
+      await setDoc(doc(db, 'shop', item.id), {
+        name_en: item.name_en,
+        name_ge: item.name_ge,
+        color_en: item.color_en,
+        color_ge: item.color_ge,
+        price: item.price,
+        img: item.img,
+        desc_en: item.desc_en,
+        desc_ge: item.desc_ge,
+        comingSoon: item.comingSoon,
+        order: item.order
+      });
+      showMessage('success', 'Saved!');
+    } catch (error: any) {
+      showMessage('error', error.message);
+    }
+    setSaving(null);
+  };
+
+  const deleteShopItem = async (id: string) => {
+    if (!confirm('Delete this item?')) return;
+    try {
+      await deleteDoc(doc(db, 'shop', id));
+      showMessage('success', 'Deleted!');
+      loadData();
+    } catch (error: any) {
+      showMessage('error', error.message);
+    }
+  };
+
+  const addShopItem = () => {
+    const newItem: ShopItem = {
+      id: `shop_${Date.now()}`,
+      name_en: 'New Item',
+      name_ge: 'ახალი ნივთი',
+      color_en: 'Color',
+      color_ge: 'ფერი',
+      price: '₾0.00',
+      img: '',
+      desc_en: '',
+      desc_ge: '',
+      comingSoon: true,
+      order: shopItems.length
+    };
+    setShopItems([...shopItems, newItem]);
+  };
+
+  // Content handlers
+  const saveHero = async () => {
+    setSaving('hero');
+    try {
+      await setDoc(doc(db, 'content', 'hero'), hero);
+      showMessage('success', 'Saved!');
+    } catch (error: any) {
+      showMessage('error', error.message);
+    }
+    setSaving(null);
+  };
+
+  const saveContacts = async () => {
+    setSaving('contacts');
+    try {
+      await setDoc(doc(db, 'content', 'contacts'), contacts);
+      showMessage('success', 'Saved!');
+    } catch (error: any) {
+      showMessage('error', error.message);
+    }
+    setSaving(null);
+  };
+
+  const saveBrand = async () => {
+    setSaving('brand');
+    try {
+      await setDoc(doc(db, 'content', 'brand'), brand);
+      showMessage('success', 'Saved!');
+    } catch (error: any) {
+      showMessage('error', error.message);
+    }
+    setSaving(null);
+  };
+
+  // Initialize all data
+  const initializeAllData = async () => {
+    if (!confirm('Initialize all data? This will populate Firebase with default content.')) return;
     setIsInitializing(true);
     try {
-      // Import the hardcoded data
-      const coffeeEn = [
-        { name: 'Espresso', price: '₾4.00', desc: 'Bold & intense signature blend' },
-        { name: 'Espresso Macchiato', price: '₾4.50', desc: 'Espresso with a dollop of foam' },
-        { name: 'Americano', price: '₾4.50', desc: 'Espresso with hot water' },
-        { name: 'Americano + Milk', price: '₾5.00', desc: 'Americano with steamed milk' },
-        { name: 'Cappuccino', price: '₾5.00', desc: 'Balanced espresso, milk and foam' },
-        { name: 'Raf Coffee', price: '₾6.00', desc: 'Espresso, cream and vanilla sugar' },
-        { name: 'Latte Macchiato', price: '₾5.50', desc: 'Layered milk and espresso' },
-        { name: 'Matcha Latte', price: '₾6.00', desc: 'Ceremonial grade matcha with steamed milk' },
-        { name: 'Cocoa', price: '₾5.00', desc: 'Rich hot chocolate' },
-        { name: 'Double Espresso', price: '₾5.50', desc: 'Two shots of signature blend' },
-        { name: 'Double Espresso Macchiato', price: '₾6.00', desc: 'Double shot with foam' },
-        { name: 'Double Americano', price: '₾6.00', desc: 'Double shot with hot water' },
-        { name: 'Double Americano + Milk', price: '₾6.50', desc: 'Double americano with steamed milk' },
-        { name: 'Double Cappuccino', price: '₾6.50', desc: 'Double shot cappuccino' },
-      ];
-      const coffeeGe = [
-        { name: 'ესპრესო', price: '₾4.00', desc: 'მკვეთრი და ინტენსიური ნაზავი' },
-        { name: 'ესპრესო მაკიატო', price: '₾4.50', desc: 'ესპრესო ქაფის წვეთით' },
-        { name: 'ამერიკანო', price: '₾4.50', desc: 'ესპრესო ცხელ წყალზე' },
-        { name: 'ამერიკანო + რძე', price: '₾5.00', desc: 'ამერიკანო ცხელი რძით' },
-        { name: 'კაპუჩინო', price: '₾5.00', desc: 'ესპრესოსა და რძის ბალანსი' },
-        { name: 'რაფ ყავა', price: '₾6.00', desc: 'ესპრესო, ნაღები და ვანილის შაქარი' },
-        { name: 'ლატე მაკიატო', price: '₾5.50', desc: 'რძის და ესპრესოს ფენები' },
-        { name: 'მატჩა ლატე', price: '₾6.00', desc: 'მატჩა ცხელი რძით' },
-        { name: 'კაკაო', price: '₾5.00', desc: 'მდიდარი ცხელი შოკოლადი' },
-        { name: 'ორმაგი ესპრესო', price: '₾5.50', desc: 'ორი შოთი საფირმო ნაზავით' },
-        { name: 'ორმაგი ესპრესო მაკიატო', price: '₾6.00', desc: 'ორმაგი შოთი ქაფით' },
-        { name: 'ორმაგი ამერიკანო', price: '₾6.00', desc: 'ორმაგი შოთი წყალზე' },
-        { name: 'ორმაგი ამერიკანო + რძე', price: '₾6.50', desc: 'ორმაგი ამერიკანო რძით' },
-        { name: 'ორმაგი კაპუჩინო', price: '₾6.50', desc: 'ორმაგი კაპუჩინო' },
-      ];
-      const teaEn = [
-        { name: 'Green Tea', price: '₾3.50', desc: 'Classic Japanese sencha, light and grassy' },
-        { name: 'Earl Grey', price: '₾3.50', desc: 'Black tea with Italian bergamot oil' },
-        { name: 'Matcha', price: '₾5.00', desc: 'Ceremonial grade Japanese green tea powder' },
-        { name: 'Jasmine Oolong', price: '₾4.00', desc: 'Semi-oxidized leaves with jasmine blossoms' },
-        { name: 'Fresh Mint', price: '₾3.75', desc: 'Hand-picked garden mint, served hot' },
-      ];
-      const teaGe = [
-        { name: 'მწვანე ჩაი', price: '₾3.50', desc: 'კლასიკური იაპონური სენჩა' },
-        { name: 'ერლ გრეი', price: '₾3.50', desc: 'შავი ჩაი ბერგამოტის ზეთით' },
-        { name: 'მატჩა', price: '₾5.00', desc: 'იაპონური მწვანე ჩაის ფხვნილი' },
-        { name: 'ჟასმინის ოლონგი', price: '₾4.00', desc: 'ნახევრად ფერმენტირებული ჟასმინით' },
-        { name: 'ახალი პიტნა', price: '₾3.75', desc: 'ბაღის პიტნა, ცხლად მიწოდებული' },
-      ];
-      const extraEn = [
-        { name: 'Croissant', price: '₾4.50', desc: 'French butter croissant, baked fresh daily' },
-        { name: 'Almond Croissant', price: '₾5.50', desc: 'Filled with almond cream and toasted flakes' },
-        { name: 'Banana Bread', price: '₾4.00', desc: 'Homemade with walnuts and dark chocolate' },
-        { name: 'Cheesecake', price: '₾6.50', desc: 'New York style, creamy and dense' },
-        { name: 'Cookie', price: '₾3.00', desc: 'Chunky chocolate chip, soft center' },
-        { name: 'Granola Bowl', price: '₾7.00', desc: 'Greek yogurt, honey, seasonal fruits' },
-        { name: 'Avocado Toast', price: '₾8.50', desc: 'Sourdough, smashed avo, chili flakes, egg' },
-      ];
-      const extraGe = [
-        { name: 'კრუასანი', price: '₾4.50', desc: 'ფრანგული კარაქის კრუასანი, ყოველდღე ახალი' },
-        { name: 'ნუშის კრუასანი', price: '₾5.50', desc: 'ნუშის კრემით და შემწვარი ფანტელებით' },
-        { name: 'ბანანის პური', price: '₾4.00', desc: 'ნიგვზით და შავი შოკოლადით' },
-        { name: 'ჩიზქეიქი', price: '₾6.50', desc: 'ნიუ-იორკის სტილი, კრემისებრი' },
-        { name: 'ორცხობილა', price: '₾3.00', desc: 'შოკოლადის ნატეხებით, რბილი შუაგული' },
-        { name: 'გრანოლას თასი', price: '₾7.00', desc: 'ბერძნული იოგურტი, თაფლი, სეზონური ხილი' },
-        { name: 'ავოკადო ტოსტი', price: '₾8.50', desc: 'მჟავე პური, ავოკადო, წიწაკა, კვერცხი' },
-      ];
+      // Menu
+      for (let i = 0; i < INIT_COFFEE.length; i++) {
+        await setDoc(doc(db, 'menu_coffee', `coffee_${i}`), { ...INIT_COFFEE[i], order: i });
+      }
+      for (let i = 0; i < INIT_TEA.length; i++) {
+        await setDoc(doc(db, 'menu_tea', `tea_${i}`), { ...INIT_TEA[i], order: i });
+      }
+      for (let i = 0; i < INIT_EXTRA.length; i++) {
+        await setDoc(doc(db, 'menu_extra', `extra_${i}`), { ...INIT_EXTRA[i], order: i });
+      }
+      // Drinks
+      for (let i = 0; i < INIT_DRINKS.length; i++) {
+        await setDoc(doc(db, 'drinks', `drink_${i}`), { ...INIT_DRINKS[i], order: i });
+      }
+      // Shop
+      for (let i = 0; i < INIT_SHOP.length; i++) {
+        await setDoc(doc(db, 'shop', `shop_${i}`), { ...INIT_SHOP[i], order: i });
+      }
+      // Content
+      await setDoc(doc(db, 'content', 'hero'), INIT_HERO);
+      await setDoc(doc(db, 'content', 'contacts'), INIT_CONTACTS);
+      await setDoc(doc(db, 'content', 'brand'), INIT_BRAND);
 
-      await initializeMenuData(coffeeEn, coffeeGe, teaEn, teaGe, extraEn, extraGe);
-      showMessage('success', 'Menu data initialized!');
-      await loadMenu(activeTab);
+      showMessage('success', 'All data initialized!');
+      loadData();
     } catch (error: any) {
       showMessage('error', error.message);
     }
@@ -209,7 +578,6 @@ const AdminPanel: React.FC = () => {
             <h1 className="text-3xl font-black text-white tracking-tight">YAM</h1>
             <p className="text-gray-500 mt-1">Admin Panel</p>
           </div>
-
           <form onSubmit={handleLogin} className="space-y-4">
             <input
               type="email"
@@ -231,10 +599,7 @@ const AdminPanel: React.FC = () => {
                 {loginError}
               </div>
             )}
-            <button
-              type="submit"
-              className="w-full py-3 bg-[#FF3B30] text-white font-bold rounded-lg hover:bg-[#FF3B30]/90 transition-colors"
-            >
+            <button type="submit" className="w-full py-3 bg-[#FF3B30] text-white font-bold rounded-lg hover:bg-[#FF3B30]/90 transition-colors">
               Login
             </button>
           </form>
@@ -248,160 +613,555 @@ const AdminPanel: React.FC = () => {
     <div className="min-h-screen bg-[#0A0A0A] text-white">
       {/* Header */}
       <header className="border-b border-gray-800 px-4 py-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-xl font-black tracking-tight">YAM Admin</h1>
             <p className="text-gray-500 text-sm">{user.email}</p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            Logout
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={initializeAllData}
+              disabled={isInitializing}
+              className="flex items-center gap-2 px-3 py-2 text-xs bg-[#161616] border border-gray-700 rounded hover:border-[#FF3B30] transition-colors disabled:opacity-50"
+            >
+              {isInitializing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+              Init All Data
+            </button>
+            <button
+              onClick={() => logoutAdmin()}
+              className="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </button>
+          </div>
         </div>
       </header>
 
       {/* Message Toast */}
       {message && (
-        <div className={`fixed top-4 right-4 flex items-center gap-2 px-4 py-2 rounded-lg ${
-          message.type === 'success' ? 'bg-green-600' : 'bg-red-600'
-        }`}>
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-2 rounded-lg ${message.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
           {message.type === 'success' ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
           {message.text}
         </div>
       )}
 
-      {/* Content */}
-      <main className="max-w-4xl mx-auto p-4">
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => setActiveTab('coffee')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'coffee' ? 'bg-[#FF3B30] text-white' : 'bg-[#161616] text-gray-400 hover:text-white'
-            }`}
-          >
-            <Coffee className="w-4 h-4" />
-            Coffee
-          </button>
-          <button
-            onClick={() => setActiveTab('tea')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'tea' ? 'bg-[#FF3B30] text-white' : 'bg-[#161616] text-gray-400 hover:text-white'
-            }`}
-          >
-            <Leaf className="w-4 h-4" />
-            Tea
-          </button>
-          <button
-            onClick={() => setActiveTab('extra')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'extra' ? 'bg-[#FF3B30] text-white' : 'bg-[#161616] text-gray-400 hover:text-white'
-            }`}
-          >
-            <Cookie className="w-4 h-4" />
-            Extra
-          </button>
+      {/* Main Tabs */}
+      <div className="border-b border-gray-800">
+        <div className="max-w-5xl mx-auto px-4">
+          <div className="flex gap-1 overflow-x-auto py-2">
+            {[
+              { id: 'menu', icon: Coffee, label: 'Menu' },
+              { id: 'drinks', icon: Image, label: 'Drinks' },
+              { id: 'shop', icon: ShoppingBag, label: 'Shop' },
+              { id: 'hero', icon: Type, label: 'Hero' },
+              { id: 'contacts', icon: MapPin, label: 'Contacts' },
+              { id: 'brand', icon: Sparkles, label: 'Brand' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as Tab)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-colors ${
+                  activeTab === tab.id ? 'bg-[#FF3B30] text-white' : 'text-gray-400 hover:text-white hover:bg-[#161616]'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
+      </div>
 
-        {/* Initialize Data Button (show only if no items) */}
-        {menuItems.length === 0 && (
-          <div className="mb-6 p-4 bg-[#161616] rounded-lg border border-gray-800">
-            <p className="text-gray-400 mb-3">No menu items found. Initialize with default data?</p>
-            <button
-              onClick={handleInitializeData}
-              disabled={isInitializing}
-              className="flex items-center gap-2 px-4 py-2 bg-[#FF3B30] text-white rounded-lg hover:bg-[#FF3B30]/90 disabled:opacity-50"
-            >
-              {isInitializing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              {isInitializing ? 'Initializing...' : 'Initialize Menu Data'}
+      {/* Content */}
+      <main className="max-w-5xl mx-auto p-4">
+        {/* Menu Tab */}
+        {activeTab === 'menu' && (
+          <>
+            <div className="flex gap-2 mb-6">
+              {(['coffee', 'tea', 'extra'] as MenuCategory[]).map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setMenuCategory(cat)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                    menuCategory === cat ? 'bg-[#333] text-white' : 'text-gray-500 hover:text-white'
+                  }`}
+                >
+                  {cat === 'coffee' && <Coffee className="w-4 h-4" />}
+                  {cat === 'tea' && <Leaf className="w-4 h-4" />}
+                  {cat === 'extra' && <Cookie className="w-4 h-4" />}
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-4">
+              {menuItems.map((item) => (
+                <div key={item.id} className="p-4 bg-[#161616] rounded-lg border border-gray-800">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500 uppercase">Name (EN)</label>
+                      <input
+                        type="text"
+                        value={item.name_en}
+                        onChange={(e) => setMenuItems(items => items.map(i => i.id === item.id ? { ...i, name_en: e.target.value } : i))}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                      <label className="text-xs text-gray-500 uppercase">Description (EN)</label>
+                      <input
+                        type="text"
+                        value={item.desc_en}
+                        onChange={(e) => setMenuItems(items => items.map(i => i.id === item.id ? { ...i, desc_en: e.target.value } : i))}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500 uppercase">Name (GE)</label>
+                      <input
+                        type="text"
+                        value={item.name_ge}
+                        onChange={(e) => setMenuItems(items => items.map(i => i.id === item.id ? { ...i, name_ge: e.target.value } : i))}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                      <label className="text-xs text-gray-500 uppercase">Description (GE)</label>
+                      <input
+                        type="text"
+                        value={item.desc_ge}
+                        onChange={(e) => setMenuItems(items => items.map(i => i.id === item.id ? { ...i, desc_ge: e.target.value } : i))}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-800">
+                    <div className="flex-1">
+                      <label className="text-xs text-gray-500 uppercase">Price</label>
+                      <input
+                        type="text"
+                        value={item.price}
+                        onChange={(e) => setMenuItems(items => items.map(i => i.id === item.id ? { ...i, price: e.target.value } : i))}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-5">
+                      <button onClick={() => saveMenuItem(item)} disabled={saving === item.id} className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
+                        {saving === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        Save
+                      </button>
+                      <button onClick={() => deleteMenuItem(item.id)} className="flex items-center gap-1 px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button onClick={addMenuItem} className="mt-4 w-full py-3 border-2 border-dashed border-gray-700 rounded-lg text-gray-500 hover:text-white hover:border-[#FF3B30] transition-colors flex items-center justify-center gap-2">
+              <Plus className="w-5 h-5" /> Add Item
             </button>
+          </>
+        )}
+
+        {/* Drinks Tab */}
+        {activeTab === 'drinks' && (
+          <>
+            <p className="text-gray-500 text-sm mb-6">Featured drinks on homepage with photos</p>
+            <div className="space-y-4">
+              {drinks.map((item) => (
+                <div key={item.id} className="p-4 bg-[#161616] rounded-lg border border-gray-800">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500 uppercase">Name (EN)</label>
+                      <input
+                        type="text"
+                        value={item.name_en}
+                        onChange={(e) => setDrinks(items => items.map(i => i.id === item.id ? { ...i, name_en: e.target.value } : i))}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                      <label className="text-xs text-gray-500 uppercase">Note (EN)</label>
+                      <input
+                        type="text"
+                        value={item.note_en}
+                        onChange={(e) => setDrinks(items => items.map(i => i.id === item.id ? { ...i, note_en: e.target.value } : i))}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500 uppercase">Name (GE)</label>
+                      <input
+                        type="text"
+                        value={item.name_ge}
+                        onChange={(e) => setDrinks(items => items.map(i => i.id === item.id ? { ...i, name_ge: e.target.value } : i))}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                      <label className="text-xs text-gray-500 uppercase">Note (GE)</label>
+                      <input
+                        type="text"
+                        value={item.note_ge}
+                        onChange={(e) => setDrinks(items => items.map(i => i.id === item.id ? { ...i, note_ge: e.target.value } : i))}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                    </div>
+                    <div>
+                      <ImageUpload
+                        currentUrl={item.img}
+                        onUpload={(url) => setDrinks(items => items.map(i => i.id === item.id ? { ...i, img: url } : i))}
+                        folder="drinks"
+                        id={item.id}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-800">
+                    <button onClick={() => saveDrink(item)} disabled={saving === item.id} className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
+                      {saving === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      Save
+                    </button>
+                    <button onClick={() => deleteDrink(item.id)} className="flex items-center gap-1 px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button onClick={addDrink} className="mt-4 w-full py-3 border-2 border-dashed border-gray-700 rounded-lg text-gray-500 hover:text-white hover:border-[#FF3B30] transition-colors flex items-center justify-center gap-2">
+              <Plus className="w-5 h-5" /> Add Drink
+            </button>
+          </>
+        )}
+
+        {/* Shop Tab */}
+        {activeTab === 'shop' && (
+          <>
+            <p className="text-gray-500 text-sm mb-6">Merchandise items</p>
+            <div className="space-y-4">
+              {shopItems.map((item) => (
+                <div key={item.id} className="p-4 bg-[#161616] rounded-lg border border-gray-800">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500 uppercase">Name (EN)</label>
+                      <input
+                        type="text"
+                        value={item.name_en}
+                        onChange={(e) => setShopItems(items => items.map(i => i.id === item.id ? { ...i, name_en: e.target.value } : i))}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                      <label className="text-xs text-gray-500 uppercase">Color (EN)</label>
+                      <input
+                        type="text"
+                        value={item.color_en}
+                        onChange={(e) => setShopItems(items => items.map(i => i.id === item.id ? { ...i, color_en: e.target.value } : i))}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                      <label className="text-xs text-gray-500 uppercase">Description (EN)</label>
+                      <input
+                        type="text"
+                        value={item.desc_en}
+                        onChange={(e) => setShopItems(items => items.map(i => i.id === item.id ? { ...i, desc_en: e.target.value } : i))}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500 uppercase">Name (GE)</label>
+                      <input
+                        type="text"
+                        value={item.name_ge}
+                        onChange={(e) => setShopItems(items => items.map(i => i.id === item.id ? { ...i, name_ge: e.target.value } : i))}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                      <label className="text-xs text-gray-500 uppercase">Color (GE)</label>
+                      <input
+                        type="text"
+                        value={item.color_ge}
+                        onChange={(e) => setShopItems(items => items.map(i => i.id === item.id ? { ...i, color_ge: e.target.value } : i))}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                      <label className="text-xs text-gray-500 uppercase">Description (GE)</label>
+                      <input
+                        type="text"
+                        value={item.desc_ge}
+                        onChange={(e) => setShopItems(items => items.map(i => i.id === item.id ? { ...i, desc_ge: e.target.value } : i))}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <ImageUpload
+                        currentUrl={item.img}
+                        onUpload={(url) => setShopItems(items => items.map(i => i.id === item.id ? { ...i, img: url } : i))}
+                        folder="shop"
+                        id={item.id}
+                      />
+                      <label className="text-xs text-gray-500 uppercase">Price</label>
+                      <input
+                        type="text"
+                        value={item.price}
+                        onChange={(e) => setShopItems(items => items.map(i => i.id === item.id ? { ...i, price: e.target.value } : i))}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                      <label className="flex items-center gap-2 cursor-pointer mt-2">
+                        <input
+                          type="checkbox"
+                          checked={item.comingSoon}
+                          onChange={(e) => setShopItems(items => items.map(i => i.id === item.id ? { ...i, comingSoon: e.target.checked } : i))}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm text-gray-400">Coming Soon</span>
+                      </label>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-800">
+                    <button onClick={() => saveShopItem(item)} disabled={saving === item.id} className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
+                      {saving === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      Save
+                    </button>
+                    <button onClick={() => deleteShopItem(item.id)} className="flex items-center gap-1 px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button onClick={addShopItem} className="mt-4 w-full py-3 border-2 border-dashed border-gray-700 rounded-lg text-gray-500 hover:text-white hover:border-[#FF3B30] transition-colors flex items-center justify-center gap-2">
+              <Plus className="w-5 h-5" /> Add Item
+            </button>
+          </>
+        )}
+
+        {/* Hero Tab */}
+        {activeTab === 'hero' && (
+          <div className="space-y-6">
+            <p className="text-gray-500 text-sm">Homepage hero section texts</p>
+            <div className="p-4 bg-[#161616] rounded-lg border border-gray-800 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Since (EN)</label>
+                  <input type="text" value={hero.since_en} onChange={(e) => setHero({ ...hero, since_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Since (GE)</label>
+                  <input type="text" value={hero.since_ge} onChange={(e) => setHero({ ...hero, since_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title Line 1 (EN)</label>
+                  <input type="text" value={hero.title1_en} onChange={(e) => setHero({ ...hero, title1_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title Line 1 (GE)</label>
+                  <input type="text" value={hero.title1_ge} onChange={(e) => setHero({ ...hero, title1_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title Line 2 (EN)</label>
+                  <input type="text" value={hero.title2_en} onChange={(e) => setHero({ ...hero, title2_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title Line 2 (GE)</label>
+                  <input type="text" value={hero.title2_ge} onChange={(e) => setHero({ ...hero, title2_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title Line 3 (EN)</label>
+                  <input type="text" value={hero.title3_en} onChange={(e) => setHero({ ...hero, title3_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title Line 3 (GE)</label>
+                  <input type="text" value={hero.title3_ge} onChange={(e) => setHero({ ...hero, title3_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">CTA Button (EN)</label>
+                  <input type="text" value={hero.cta_en} onChange={(e) => setHero({ ...hero, cta_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">CTA Button (GE)</label>
+                  <input type="text" value={hero.cta_ge} onChange={(e) => setHero({ ...hero, cta_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+              <div className="flex justify-end pt-4 border-t border-gray-800">
+                <button onClick={saveHero} disabled={saving === 'hero'} className="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
+                  {saving === 'hero' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Save Hero
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Menu Items */}
-        <div className="space-y-4">
-          {menuItems.map((item) => (
-            <div key={item.id} className="p-4 bg-[#161616] rounded-lg border border-gray-800">
+        {/* Contacts Tab */}
+        {activeTab === 'contacts' && (
+          <div className="space-y-6">
+            <p className="text-gray-500 text-sm">Location and hours information</p>
+            <div className="p-4 bg-[#161616] rounded-lg border border-gray-800 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* English */}
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Name (EN)</label>
-                  <input
-                    type="text"
-                    value={item.name_en}
-                    onChange={(e) => updateItem(item.id, 'name_en', e.target.value)}
-                    className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
-                  />
-                  <label className="text-xs text-gray-500 uppercase">Description (EN)</label>
-                  <input
-                    type="text"
-                    value={item.desc_en}
-                    onChange={(e) => updateItem(item.id, 'desc_en', e.target.value)}
-                    className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
-                  />
+                  <label className="text-xs text-gray-500 uppercase">Location (EN)</label>
+                  <input type="text" value={contacts.location_en} onChange={(e) => setContacts({ ...contacts, location_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
                 </div>
-                {/* Georgian */}
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Name (GE)</label>
-                  <input
-                    type="text"
-                    value={item.name_ge}
-                    onChange={(e) => updateItem(item.id, 'name_ge', e.target.value)}
-                    className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
-                  />
-                  <label className="text-xs text-gray-500 uppercase">Description (GE)</label>
-                  <input
-                    type="text"
-                    value={item.desc_ge}
-                    onChange={(e) => updateItem(item.id, 'desc_ge', e.target.value)}
-                    className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
-                  />
+                  <label className="text-xs text-gray-500 uppercase">Location (GE)</label>
+                  <input type="text" value={contacts.location_ge} onChange={(e) => setContacts({ ...contacts, location_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
                 </div>
               </div>
-
-              {/* Price & Actions */}
-              <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-800">
-                <div className="flex-1">
-                  <label className="text-xs text-gray-500 uppercase">Price</label>
-                  <input
-                    type="text"
-                    value={item.price}
-                    onChange={(e) => updateItem(item.id, 'price', e.target.value)}
-                    className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
-                  />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">City (EN)</label>
+                  <input type="text" value={contacts.city_en} onChange={(e) => setContacts({ ...contacts, city_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
                 </div>
-                <div className="flex gap-2 pt-5">
-                  <button
-                    onClick={() => handleSaveItem(item)}
-                    disabled={saving === item.id}
-                    className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-                  >
-                    {saving === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    Save
-                  </button>
-                  <button
-                    onClick={() => handleDeleteItem(item.id)}
-                    className="flex items-center gap-1 px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">City (GE)</label>
+                  <input type="text" value={contacts.city_ge} onChange={(e) => setContacts({ ...contacts, city_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
                 </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Hours Weekday (EN)</label>
+                  <input type="text" value={contacts.hours_week_en} onChange={(e) => setContacts({ ...contacts, hours_week_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Hours Weekday (GE)</label>
+                  <input type="text" value={contacts.hours_week_ge} onChange={(e) => setContacts({ ...contacts, hours_week_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Hours Weekend (EN)</label>
+                  <input type="text" value={contacts.hours_weekend_en} onChange={(e) => setContacts({ ...contacts, hours_weekend_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Hours Weekend (GE)</label>
+                  <input type="text" value={contacts.hours_weekend_ge} onChange={(e) => setContacts({ ...contacts, hours_weekend_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Visit Description (EN)</label>
+                  <textarea value={contacts.visit_desc_en} onChange={(e) => setContacts({ ...contacts, visit_desc_en: e.target.value })} rows={3} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Visit Description (GE)</label>
+                  <textarea value={contacts.visit_desc_ge} onChange={(e) => setContacts({ ...contacts, visit_desc_ge: e.target.value })} rows={3} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+              <div className="flex justify-end pt-4 border-t border-gray-800">
+                <button onClick={saveContacts} disabled={saving === 'contacts'} className="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
+                  {saving === 'contacts' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Save Contacts
+                </button>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
 
-        {/* Add Button */}
-        <button
-          onClick={handleAddItem}
-          className="mt-4 w-full py-3 border-2 border-dashed border-gray-700 rounded-lg text-gray-500 hover:text-white hover:border-[#FF3B30] transition-colors flex items-center justify-center gap-2"
-        >
-          <Plus className="w-5 h-5" />
-          Add Item
-        </button>
+        {/* Brand Tab */}
+        {activeTab === 'brand' && (
+          <div className="space-y-6">
+            <p className="text-gray-500 text-sm">Brand page content</p>
+            <div className="p-4 bg-[#161616] rounded-lg border border-gray-800 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title (EN)</label>
+                  <input type="text" value={brand.title1_en} onChange={(e) => setBrand({ ...brand, title1_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title (GE)</label>
+                  <input type="text" value={brand.title1_ge} onChange={(e) => setBrand({ ...brand, title1_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title Accent (EN)</label>
+                  <input type="text" value={brand.title_accent_en} onChange={(e) => setBrand({ ...brand, title_accent_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title Accent (GE)</label>
+                  <input type="text" value={brand.title_accent_ge} onChange={(e) => setBrand({ ...brand, title_accent_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Description (EN)</label>
+                  <textarea value={brand.desc_en} onChange={(e) => setBrand({ ...brand, desc_en: e.target.value })} rows={3} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Description (GE)</label>
+                  <textarea value={brand.desc_ge} onChange={(e) => setBrand({ ...brand, desc_ge: e.target.value })} rows={3} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+
+              <div className="border-t border-gray-800 pt-4 mt-4">
+                <h4 className="text-sm font-bold text-gray-400 mb-4">Stats</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Stat 1 Value</label>
+                    <input type="text" value={brand.stat1} onChange={(e) => setBrand({ ...brand, stat1: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Stat 1 Label (EN)</label>
+                    <input type="text" value={brand.stat1_label_en} onChange={(e) => setBrand({ ...brand, stat1_label_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Stat 2 Value</label>
+                    <input type="text" value={brand.stat2} onChange={(e) => setBrand({ ...brand, stat2: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Stat 2 Label (EN)</label>
+                    <input type="text" value={brand.stat2_label_en} onChange={(e) => setBrand({ ...brand, stat2_label_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-800 pt-4 mt-4">
+                <h4 className="text-sm font-bold text-gray-400 mb-4">Features</h4>
+                {[1, 2, 3].map((num) => (
+                  <div key={num} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500 uppercase">Feature {num} Title (EN)</label>
+                      <input
+                        type="text"
+                        value={(brand as any)[`feature${num}_title_en`]}
+                        onChange={(e) => setBrand({ ...brand, [`feature${num}_title_en`]: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                      <label className="text-xs text-gray-500 uppercase">Feature {num} Text (EN)</label>
+                      <input
+                        type="text"
+                        value={(brand as any)[`feature${num}_text_en`]}
+                        onChange={(e) => setBrand({ ...brand, [`feature${num}_text_en`]: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500 uppercase">Feature {num} Title (GE)</label>
+                      <input
+                        type="text"
+                        value={(brand as any)[`feature${num}_title_ge`]}
+                        onChange={(e) => setBrand({ ...brand, [`feature${num}_title_ge`]: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                      <label className="text-xs text-gray-500 uppercase">Feature {num} Text (GE)</label>
+                      <input
+                        type="text"
+                        value={(brand as any)[`feature${num}_text_ge`]}
+                        onChange={(e) => setBrand({ ...brand, [`feature${num}_text_ge`]: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex justify-end pt-4 border-t border-gray-800">
+                <button onClick={saveBrand} disabled={saving === 'brand'} className="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
+                  {saving === 'brand' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Save Brand
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
