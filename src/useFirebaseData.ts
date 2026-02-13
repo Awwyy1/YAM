@@ -208,4 +208,114 @@ export function useShopData(lang: Lang) {
   return { items, isLoading, source };
 }
 
-export { FALLBACK_DRINKS, FALLBACK_SHOP };
+// Marquee Items
+interface MarqueeItem {
+  text: string;
+  style: 'bold' | 'italic';
+}
+
+interface FirebaseMarqueeItem {
+  text_en: string;
+  text_ge: string;
+  style: 'bold' | 'italic';
+  order: number;
+}
+
+interface FirebaseMarqueeContent {
+  items: FirebaseMarqueeItem[];
+}
+
+// Fallback marquee items
+const FALLBACK_MARQUEE: Record<Lang, MarqueeItem[]> = {
+  en: [
+    { text: 'ORGANIC SOIL', style: 'bold' },
+    { text: 'daily roast', style: 'italic' },
+    { text: 'FAIR TRADE', style: 'bold' },
+    { text: 'slow mornings', style: 'italic' },
+    { text: 'NO SHORTCUTS', style: 'bold' },
+    { text: 'craft over hype', style: 'italic' },
+    { text: 'BATUMI', style: 'bold' },
+    { text: 'good beans only', style: 'italic' },
+    { text: 'EST. 2026', style: 'bold' },
+    { text: 'sip the vibe', style: 'italic' },
+  ],
+  ge: [
+    { text: 'ორგანული ნიადაგი', style: 'bold' },
+    { text: 'ყოველდღიური მოხალვა', style: 'italic' },
+    { text: 'სამართლიანი ვაჭრობა', style: 'bold' },
+    { text: 'მშვიდი დილა', style: 'italic' },
+    { text: 'კომპრომისის გარეშე', style: 'bold' },
+    { text: 'ხელობა, არა ჰაიპი', style: 'italic' },
+    { text: 'ბათუმი', style: 'bold' },
+    { text: 'მხოლოდ კარგი მარცვალი', style: 'italic' },
+    { text: '2026 წლიდან', style: 'bold' },
+    { text: 'იგრძენი ვაიბი', style: 'italic' },
+  ]
+};
+
+// Hook to get marquee data
+export function useMarqueeData(lang: Lang) {
+  const [items, setItems] = useState<MarqueeItem[]>(FALLBACK_MARQUEE[lang]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [source, setSource] = useState<'firebase' | 'fallback'>('fallback');
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadMarquee() {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'content'));
+        let marqueeData: FirebaseMarqueeContent | null = null;
+
+        querySnapshot.forEach((doc) => {
+          if (doc.id === 'marquee') {
+            marqueeData = doc.data() as FirebaseMarqueeContent;
+          }
+        });
+
+        if (!mounted) return;
+
+        if (marqueeData && marqueeData.items && marqueeData.items.length > 0) {
+          const converted = marqueeData.items
+            .sort((a, b) => a.order - b.order)
+            .map((item) => ({
+              text: lang === 'en' ? item.text_en : item.text_ge,
+              style: item.style,
+            }));
+          setItems(converted);
+          setSource('firebase');
+        } else {
+          setItems(FALLBACK_MARQUEE[lang]);
+          setSource('fallback');
+        }
+      } catch (error) {
+        console.warn('Firebase unavailable for marquee, using fallback:', error);
+        if (mounted) {
+          setItems(FALLBACK_MARQUEE[lang]);
+          setSource('fallback');
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadMarquee();
+
+    return () => {
+      mounted = false;
+    };
+  }, [lang]);
+
+  // Update when language changes and using fallback
+  useEffect(() => {
+    if (source === 'fallback') {
+      setItems(FALLBACK_MARQUEE[lang]);
+    }
+  }, [lang, source]);
+
+  return { items, isLoading, source };
+}
+
+export { FALLBACK_DRINKS, FALLBACK_SHOP, FALLBACK_MARQUEE };

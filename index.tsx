@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, X, Instagram, Sun, Moon, Leaf, Coffee, Globe, ArrowUpRight, MapPin, Clock, Trash2, Gamepad2, Share2, Lock, Trophy, AlertCircle, Bomb, Type, Palette, Layout, Grid, Check, Sparkles, Eye, Camera, MessageSquare, Heart, RefreshCw } from 'lucide-react';
 import AdminPanel from './src/Admin';
 import { useMenuData } from './src/useFirebaseMenu';
-import { useDrinksData, useShopData } from './src/useFirebaseData';
+import { useDrinksData, useShopData, useMarqueeData } from './src/useFirebaseData';
 
 // GTM DataLayer integration
 declare global {
@@ -1367,6 +1367,7 @@ const App = () => {
   const t = CONTENT[lang];
   const { coffee: coffeeMenu, tea: teaMenu, extra: extraMenu } = useMenuData(lang);
   const { drinks: featuredDrinks } = useDrinksData(lang);
+  const { items: marqueeItems } = useMarqueeData(lang);
   useEffect(() => { window.scrollTo(0, 0); trackPageView(location.pathname); }, [location.pathname]);
 
   // Admin page - render without nav/footer
@@ -1412,30 +1413,8 @@ const App = () => {
                 <div className="flex animate-marquee whitespace-nowrap">
                   {[...Array(2)].map((_, loop) => (
                     <div key={loop} className="flex items-center shrink-0">
-                      {(lang === 'en' ? [
-                        { text: "ORGANIC SOIL", style: "font-black" },
-                        { text: "daily roast", style: "italic font-light" },
-                        { text: "FAIR TRADE", style: "font-black tracking-[0.3em]" },
-                        { text: "slow mornings", style: "italic font-light" },
-                        { text: "NO SHORTCUTS", style: "font-black" },
-                        { text: "craft over hype", style: "italic font-light" },
-                        { text: "BATUMI", style: "font-black tracking-[0.3em]" },
-                        { text: "good beans only", style: "italic font-light" },
-                        { text: "EST. 2026", style: "font-black" },
-                        { text: "sip the vibe", style: "italic font-light" },
-                      ] : [
-                        { text: "ორგანული ნიადაგი", style: "font-black" },
-                        { text: "ყოველდღიური მოხალვა", style: "italic font-light" },
-                        { text: "სამართლიანი ვაჭრობა", style: "font-black tracking-[0.2em]" },
-                        { text: "მშვიდი დილა", style: "italic font-light" },
-                        { text: "კომპრომისის გარეშე", style: "font-black" },
-                        { text: "ხელობა, არა ჰაიპი", style: "italic font-light" },
-                        { text: "ბათუმი", style: "font-black tracking-[0.2em]" },
-                        { text: "მხოლოდ კარგი მარცვალი", style: "italic font-light" },
-                        { text: "2026 წლიდან", style: "font-black" },
-                        { text: "იგრძენი ვაიბი", style: "italic font-light" },
-                      ]).map((item, i) => (
-                        <span key={`${loop}-${i}`} className={`text-white text-lg md:text-2xl mx-6 ${item.style}`}>
+                      {marqueeItems.map((item, i) => (
+                        <span key={`${loop}-${i}`} className={`text-white text-lg md:text-2xl mx-6 ${item.style === 'bold' ? 'font-black' : 'italic font-light'} ${item.style === 'bold' && lang === 'en' ? 'tracking-[0.2em]' : ''}`}>
                           {item.text}
                           <span className="mx-6 text-white/40 font-normal not-italic">&#x2022;</span>
                         </span>

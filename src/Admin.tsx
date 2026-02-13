@@ -6,10 +6,10 @@ import {
   db,
   storage
 } from './firebase';
-import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { User } from 'firebase/auth';
-import { LogOut, Plus, Trash2, Save, Coffee, Leaf, Cookie, Loader2, AlertCircle, Check, Image, ShoppingBag, Type, MapPin, Sparkles, Upload, Sun, Moon, Gamepad2, Eye } from 'lucide-react';
+import { LogOut, Plus, Trash2, Save, Coffee, Leaf, Cookie, Loader2, AlertCircle, Check, Image, ShoppingBag, Type, MapPin, Sparkles, Upload, Sun, Moon, Gamepad2, Eye, AlignJustify } from 'lucide-react';
 
 // Types
 interface MenuItem {
@@ -176,7 +176,18 @@ interface OracleContent {
   predictions_ge: string[];
 }
 
-type Tab = 'menu' | 'drinks' | 'shop' | 'hero' | 'contacts' | 'brand' | 'game' | 'oracle';
+interface MarqueeItem {
+  text_en: string;
+  text_ge: string;
+  style: 'bold' | 'italic';
+  order: number;
+}
+
+interface MarqueeContent {
+  items: MarqueeItem[];
+}
+
+type Tab = 'menu' | 'drinks' | 'shop' | 'hero' | 'contacts' | 'brand' | 'game' | 'oracle' | 'marquee';
 type MenuCategory = 'coffee' | 'tea' | 'extra';
 
 // Fallback data for initialization
@@ -380,6 +391,21 @@ const INIT_ORACLE: OracleContent = {
   ],
 };
 
+const INIT_MARQUEE: MarqueeContent = {
+  items: [
+    { text_en: 'ORGANIC SOIL', text_ge: 'ორგანული ნიადაგი', style: 'bold', order: 0 },
+    { text_en: 'daily roast', text_ge: 'ყოველდღიური მოხალვა', style: 'italic', order: 1 },
+    { text_en: 'FAIR TRADE', text_ge: 'სამართლიანი ვაჭრობა', style: 'bold', order: 2 },
+    { text_en: 'slow mornings', text_ge: 'მშვიდი დილა', style: 'italic', order: 3 },
+    { text_en: 'NO SHORTCUTS', text_ge: 'კომპრომისის გარეშე', style: 'bold', order: 4 },
+    { text_en: 'craft over hype', text_ge: 'ხელობა, არა ჰაიპი', style: 'italic', order: 5 },
+    { text_en: 'BATUMI', text_ge: 'ბათუმი', style: 'bold', order: 6 },
+    { text_en: 'good beans only', text_ge: 'მხოლოდ კარგი მარცვალი', style: 'italic', order: 7 },
+    { text_en: 'EST. 2026', text_ge: '2026 წლიდან', style: 'bold', order: 8 },
+    { text_en: 'sip the vibe', text_ge: 'იგრძენი ვაიბი', style: 'italic', order: 9 },
+  ]
+};
+
 // Theme colors
 const THEME = {
   dark: {
@@ -483,6 +509,7 @@ const AdminPanel: React.FC = () => {
   const [brand, setBrand] = useState<BrandContent>(INIT_BRAND);
   const [game, setGame] = useState<GameContent>(INIT_GAME);
   const [oracle, setOracle] = useState<OracleContent>(INIT_ORACLE);
+  const [marquee, setMarquee] = useState<MarqueeContent>(INIT_MARQUEE);
 
   const [saving, setSaving] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -561,6 +588,11 @@ const AdminPanel: React.FC = () => {
         const snap = await getDocs(collection(db, 'content'));
         snap.forEach((doc) => {
           if (doc.id === 'oracle') setOracle(doc.data() as OracleContent);
+        });
+      } else if (activeTab === 'marquee') {
+        const snap = await getDocs(collection(db, 'content'));
+        snap.forEach((doc) => {
+          if (doc.id === 'marquee') setMarquee(doc.data() as MarqueeContent);
         });
       }
     } catch (error) {
@@ -776,37 +808,82 @@ const AdminPanel: React.FC = () => {
     setSaving(null);
   };
 
+  const saveMarquee = async () => {
+    setSaving('marquee');
+    try {
+      await setDoc(doc(db, 'content', 'marquee'), marquee);
+      showMessage('success', 'Saved!');
+    } catch (error: any) {
+      showMessage('error', error.message);
+    }
+    setSaving(null);
+  };
+
+  const addMarqueeItem = () => {
+    const newItem: MarqueeItem = {
+      text_en: 'NEW ITEM',
+      text_ge: 'ახალი',
+      style: 'bold',
+      order: marquee.items.length
+    };
+    setMarquee({ items: [...marquee.items, newItem] });
+  };
+
+  const deleteMarqueeItem = (index: number) => {
+    const newItems = marquee.items.filter((_, i) => i !== index);
+    setMarquee({ items: newItems.map((item, i) => ({ ...item, order: i })) });
+  };
+
   // Initialize all data
   const initializeAllData = async () => {
-    if (!confirm('Initialize all data? This will populate Firebase with default content.')) return;
+    if (!confirm('Initialize all data? This will add missing items while PRESERVING existing prices and images.')) return;
     setIsInitializing(true);
     try {
-      // Menu
+      // Helper to merge data - preserves existing price and img fields
+      const mergeWithExisting = async (collectionName: string, docId: string, initData: any) => {
+        const docRef = doc(db, collectionName, docId);
+        const existingDoc = await getDoc(docRef);
+        if (existingDoc.exists()) {
+          const existingData = existingDoc.data();
+          // Preserve user-edited fields: price, img
+          const mergedData = {
+            ...initData,
+            price: existingData.price || initData.price,
+            img: existingData.img || initData.img,
+          };
+          await setDoc(docRef, mergedData);
+        } else {
+          await setDoc(docRef, initData);
+        }
+      };
+
+      // Menu - preserve prices
       for (let i = 0; i < INIT_COFFEE.length; i++) {
-        await setDoc(doc(db, 'menu_coffee', `coffee_${i}`), { ...INIT_COFFEE[i], order: i });
+        await mergeWithExisting('menu_coffee', `coffee_${i}`, { ...INIT_COFFEE[i], order: i });
       }
       for (let i = 0; i < INIT_TEA.length; i++) {
-        await setDoc(doc(db, 'menu_tea', `tea_${i}`), { ...INIT_TEA[i], order: i });
+        await mergeWithExisting('menu_tea', `tea_${i}`, { ...INIT_TEA[i], order: i });
       }
       for (let i = 0; i < INIT_EXTRA.length; i++) {
-        await setDoc(doc(db, 'menu_extra', `extra_${i}`), { ...INIT_EXTRA[i], order: i });
+        await mergeWithExisting('menu_extra', `extra_${i}`, { ...INIT_EXTRA[i], order: i });
       }
-      // Drinks
+      // Drinks - preserve images
       for (let i = 0; i < INIT_DRINKS.length; i++) {
-        await setDoc(doc(db, 'drinks', `drink_${i}`), { ...INIT_DRINKS[i], order: i });
+        await mergeWithExisting('drinks', `drink_${i}`, { ...INIT_DRINKS[i], order: i });
       }
-      // Shop
+      // Shop - preserve prices and images
       for (let i = 0; i < INIT_SHOP.length; i++) {
-        await setDoc(doc(db, 'shop', `shop_${i}`), { ...INIT_SHOP[i], order: i });
+        await mergeWithExisting('shop', `shop_${i}`, { ...INIT_SHOP[i], order: i });
       }
-      // Content
-      await setDoc(doc(db, 'content', 'hero'), INIT_HERO);
-      await setDoc(doc(db, 'content', 'contacts'), INIT_CONTACTS);
-      await setDoc(doc(db, 'content', 'brand'), INIT_BRAND);
-      await setDoc(doc(db, 'content', 'game'), INIT_GAME);
-      await setDoc(doc(db, 'content', 'oracle'), INIT_ORACLE);
+      // Content - use merge to preserve existing fields
+      await setDoc(doc(db, 'content', 'hero'), INIT_HERO, { merge: true });
+      await setDoc(doc(db, 'content', 'contacts'), INIT_CONTACTS, { merge: true });
+      await setDoc(doc(db, 'content', 'brand'), INIT_BRAND, { merge: true });
+      await setDoc(doc(db, 'content', 'game'), INIT_GAME, { merge: true });
+      await setDoc(doc(db, 'content', 'oracle'), INIT_ORACLE, { merge: true });
+      await setDoc(doc(db, 'content', 'marquee'), INIT_MARQUEE, { merge: true });
 
-      showMessage('success', 'All data initialized!');
+      showMessage('success', 'All data initialized! Prices and images preserved.');
       loadData();
     } catch (error: any) {
       showMessage('error', error.message);
@@ -934,6 +1011,7 @@ const AdminPanel: React.FC = () => {
               { id: 'brand', icon: Sparkles, label: 'Brand' },
               { id: 'game', icon: Gamepad2, label: 'Game' },
               { id: 'oracle', icon: Eye, label: 'Oracle' },
+              { id: 'marquee', icon: AlignJustify, label: 'Marquee' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -1931,6 +2009,96 @@ const AdminPanel: React.FC = () => {
                   Save Oracle
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Marquee Tab */}
+        {activeTab === 'marquee' && (
+          <div className="space-y-6">
+            <p className="text-sm" style={{ color: theme.textMuted }}>Edit the scrolling banner text on the homepage. Items alternate between bold and italic styles.</p>
+            <div className="space-y-4">
+              {marquee.items.map((item, index) => (
+                <div key={index} className="p-4 rounded-lg" style={cardStyle}>
+                  <div className="flex items-center gap-4 mb-4">
+                    <span className="text-xs font-bold px-2 py-1 rounded" style={{
+                      backgroundColor: item.style === 'bold' ? '#FF3B30' : theme.border,
+                      color: item.style === 'bold' ? '#FFFFFF' : theme.textMuted
+                    }}>
+                      {item.style === 'bold' ? 'BOLD' : 'italic'}
+                    </span>
+                    <select
+                      value={item.style}
+                      onChange={(e) => {
+                        const newItems = [...marquee.items];
+                        newItems[index] = { ...item, style: e.target.value as 'bold' | 'italic' };
+                        setMarquee({ items: newItems });
+                      }}
+                      className="px-2 py-1 rounded text-sm focus:outline-none focus:border-[#FF3B30]"
+                      style={inputStyle}
+                    >
+                      <option value="bold">Bold</option>
+                      <option value="italic">Italic</option>
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs uppercase" style={labelStyle}>Text (EN)</label>
+                      <input
+                        type="text"
+                        value={item.text_en}
+                        onChange={(e) => {
+                          const newItems = [...marquee.items];
+                          newItems[index] = { ...item, text_en: e.target.value };
+                          setMarquee({ items: newItems });
+                        }}
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]"
+                        style={inputStyle}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs uppercase" style={labelStyle}>Text (GE)</label>
+                      <input
+                        type="text"
+                        value={item.text_ge}
+                        onChange={(e) => {
+                          const newItems = [...marquee.items];
+                          newItems[index] = { ...item, text_ge: e.target.value };
+                          setMarquee({ items: newItems });
+                        }}
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]"
+                        style={inputStyle}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end mt-4 pt-4 border-t" style={{ borderColor: theme.border }}>
+                    <button
+                      onClick={() => deleteMarqueeItem(index)}
+                      className="flex items-center gap-1 px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={addMarqueeItem}
+              className="w-full py-3 border-2 border-dashed rounded-lg hover:border-[#FF3B30] transition-colors flex items-center justify-center gap-2"
+              style={{ borderColor: theme.border, color: theme.textMuted }}
+            >
+              <Plus className="w-5 h-5" /> Add Item
+            </button>
+            <div className="flex justify-end pt-4">
+              <button
+                onClick={saveMarquee}
+                disabled={saving === 'marquee'}
+                className="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+              >
+                {saving === 'marquee' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Marquee
+              </button>
             </div>
           </div>
         )}
