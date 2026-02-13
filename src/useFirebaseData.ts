@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 
 type Lang = 'en' | 'ge';
@@ -77,24 +77,21 @@ const FALLBACK_SHOP: Record<Lang, ShopItem[]> = {
   ]
 };
 
-// Hook to get featured drinks data
+// Hook to get featured drinks data with real-time updates
 export function useDrinksData(lang: Lang) {
-  const [drinks, setDrinks] = useState<DrinkItem[]>(FALLBACK_DRINKS[lang]);
+  const [drinks, setDrinks] = useState<DrinkItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [source, setSource] = useState<'firebase' | 'fallback'>('fallback');
+  const [source, setSource] = useState<'firebase' | 'fallback'>('firebase');
 
   useEffect(() => {
-    let mounted = true;
-
-    async function loadDrinks() {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'drinks'));
+    // Real-time listener for drinks collection
+    const unsubscribe = onSnapshot(
+      collection(db, 'drinks'),
+      (snapshot) => {
         const items: FirebaseDrink[] = [];
-        querySnapshot.forEach((doc) => {
+        snapshot.forEach((doc) => {
           items.push({ id: doc.id, ...doc.data() } as FirebaseDrink);
         });
-
-        if (!mounted) return;
 
         if (items.length > 0) {
           const converted = items
@@ -111,54 +108,37 @@ export function useDrinksData(lang: Lang) {
           setDrinks(FALLBACK_DRINKS[lang]);
           setSource('fallback');
         }
-      } catch (error) {
+        setIsLoading(false);
+      },
+      (error) => {
         console.warn('Firebase unavailable for drinks, using fallback:', error);
-        if (mounted) {
-          setDrinks(FALLBACK_DRINKS[lang]);
-          setSource('fallback');
-        }
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
+        setDrinks(FALLBACK_DRINKS[lang]);
+        setSource('fallback');
+        setIsLoading(false);
       }
-    }
+    );
 
-    loadDrinks();
-
-    return () => {
-      mounted = false;
-    };
+    return () => unsubscribe();
   }, [lang]);
-
-  // Update when language changes and using fallback
-  useEffect(() => {
-    if (source === 'fallback') {
-      setDrinks(FALLBACK_DRINKS[lang]);
-    }
-  }, [lang, source]);
 
   return { drinks, isLoading, source };
 }
 
-// Hook to get shop data
+// Hook to get shop data with real-time updates
 export function useShopData(lang: Lang) {
-  const [items, setItems] = useState<ShopItem[]>(FALLBACK_SHOP[lang]);
+  const [items, setItems] = useState<ShopItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [source, setSource] = useState<'firebase' | 'fallback'>('fallback');
+  const [source, setSource] = useState<'firebase' | 'fallback'>('firebase');
 
   useEffect(() => {
-    let mounted = true;
-
-    async function loadShop() {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'shop'));
+    // Real-time listener for shop collection
+    const unsubscribe = onSnapshot(
+      collection(db, 'shop'),
+      (snapshot) => {
         const shopItems: FirebaseShopItem[] = [];
-        querySnapshot.forEach((doc) => {
+        snapshot.forEach((doc) => {
           shopItems.push({ id: doc.id, ...doc.data() } as FirebaseShopItem);
         });
-
-        if (!mounted) return;
 
         if (shopItems.length > 0) {
           const converted = shopItems
@@ -178,32 +158,18 @@ export function useShopData(lang: Lang) {
           setItems(FALLBACK_SHOP[lang]);
           setSource('fallback');
         }
-      } catch (error) {
+        setIsLoading(false);
+      },
+      (error) => {
         console.warn('Firebase unavailable for shop, using fallback:', error);
-        if (mounted) {
-          setItems(FALLBACK_SHOP[lang]);
-          setSource('fallback');
-        }
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
+        setItems(FALLBACK_SHOP[lang]);
+        setSource('fallback');
+        setIsLoading(false);
       }
-    }
+    );
 
-    loadShop();
-
-    return () => {
-      mounted = false;
-    };
+    return () => unsubscribe();
   }, [lang]);
-
-  // Update when language changes and using fallback
-  useEffect(() => {
-    if (source === 'fallback') {
-      setItems(FALLBACK_SHOP[lang]);
-    }
-  }, [lang, source]);
 
   return { items, isLoading, source };
 }
@@ -253,67 +219,48 @@ const FALLBACK_MARQUEE: Record<Lang, MarqueeItem[]> = {
   ]
 };
 
-// Hook to get marquee data
+// Hook to get marquee data with real-time updates
 export function useMarqueeData(lang: Lang) {
   const [items, setItems] = useState<MarqueeItem[]>(FALLBACK_MARQUEE[lang]);
   const [isLoading, setIsLoading] = useState(true);
   const [source, setSource] = useState<'firebase' | 'fallback'>('fallback');
 
   useEffect(() => {
-    let mounted = true;
-
-    async function loadMarquee() {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'content'));
-        let marqueeData: FirebaseMarqueeContent | null = null;
-
-        querySnapshot.forEach((doc) => {
-          if (doc.id === 'marquee') {
-            marqueeData = doc.data() as FirebaseMarqueeContent;
+    // Real-time listener for marquee content document
+    const unsubscribe = onSnapshot(
+      doc(db, 'content', 'marquee'),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const marqueeData = docSnap.data() as FirebaseMarqueeContent;
+          if (marqueeData.items && marqueeData.items.length > 0) {
+            const converted = marqueeData.items
+              .sort((a, b) => a.order - b.order)
+              .map((item) => ({
+                text: lang === 'en' ? item.text_en : item.text_ge,
+                style: item.style,
+              }));
+            setItems(converted);
+            setSource('firebase');
+          } else {
+            setItems(FALLBACK_MARQUEE[lang]);
+            setSource('fallback');
           }
-        });
-
-        if (!mounted) return;
-
-        if (marqueeData && marqueeData.items && marqueeData.items.length > 0) {
-          const converted = marqueeData.items
-            .sort((a, b) => a.order - b.order)
-            .map((item) => ({
-              text: lang === 'en' ? item.text_en : item.text_ge,
-              style: item.style,
-            }));
-          setItems(converted);
-          setSource('firebase');
         } else {
           setItems(FALLBACK_MARQUEE[lang]);
           setSource('fallback');
         }
-      } catch (error) {
+        setIsLoading(false);
+      },
+      (error) => {
         console.warn('Firebase unavailable for marquee, using fallback:', error);
-        if (mounted) {
-          setItems(FALLBACK_MARQUEE[lang]);
-          setSource('fallback');
-        }
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
+        setItems(FALLBACK_MARQUEE[lang]);
+        setSource('fallback');
+        setIsLoading(false);
       }
-    }
+    );
 
-    loadMarquee();
-
-    return () => {
-      mounted = false;
-    };
+    return () => unsubscribe();
   }, [lang]);
-
-  // Update when language changes and using fallback
-  useEffect(() => {
-    if (source === 'fallback') {
-      setItems(FALLBACK_MARQUEE[lang]);
-    }
-  }, [lang, source]);
 
   return { items, isLoading, source };
 }
