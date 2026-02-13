@@ -97,6 +97,7 @@ interface BrandContent {
   feature3_title_ge: string;
   feature3_text_en: string;
   feature3_text_ge: string;
+  image_url: string;
 }
 
 interface GameContent {
@@ -278,6 +279,7 @@ const INIT_BRAND: BrandContent = {
   feature3_title_ge: 'ღია',
   feature3_text_en: 'Walk in as a stranger, leave as a regular.',
   feature3_text_ge: 'შემოდი უცხოდ, წადი როგორც მუდმივი.',
+  image_url: 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=1200&q=80',
 };
 
 const INIT_GAME: GameContent = {
@@ -1370,6 +1372,17 @@ const AdminPanel: React.FC = () => {
                   <label className="text-xs uppercase" style={labelStyle}>Description (GE)</label>
                   <textarea value={brand.desc_ge} onChange={(e) => setBrand({ ...brand, desc_ge: e.target.value })} rows={3} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
+              </div>
+
+              <div className="border-t pt-4 mt-4" style={{ borderColor: theme.border }}>
+                <h4 className="text-sm font-bold mb-4" style={{ color: theme.textMuted }}>Brand Image</h4>
+                <ImageUpload
+                  currentUrl={brand.image_url}
+                  onUpload={(url) => setBrand({ ...brand, image_url: url })}
+                  folder="brand"
+                  id="brand_image"
+                  theme={theme}
+                />
               </div>
 
               <div className="border-t pt-4 mt-4" style={{ borderColor: theme.border }}>
