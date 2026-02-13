@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, X, Instagram, Sun, Moon, Leaf, Coffee, Globe, ArrowUpRight, MapPin, Clock, Trash2, Gamepad2, Share2, Lock, Trophy, AlertCircle, Bomb, Type, Palette, Layout, Grid, Check, Sparkles, Eye, Camera, MessageSquare, Heart, RefreshCw } from 'lucide-react';
 import AdminPanel from './src/Admin';
 import { useMenuData } from './src/useFirebaseMenu';
+import { useDrinksData, useShopData } from './src/useFirebaseData';
 
 // GTM DataLayer integration
 declare global {
@@ -157,6 +158,8 @@ const CONTENT = {
             win_desc: "Screenshot this ticket and show it to our barista.",
             lose_title: "BOOM!",
             lose_desc: "You hit a bad bean. Better luck next time.",
+            bad_bean_title: "BAD BEAN.",
+            exit_game: "Exit Game",
             retry: "Try Again",
             fake_share_btn: "I posted it! Give me code.",
             ticket_id: "TICKET ID",
@@ -340,6 +343,8 @@ const CONTENT = {
             win_desc: "გადაუღეთ ეკრანს სურათი და აჩვენეთ ბარისტას.",
             lose_title: "ბუმ!",
             lose_desc: "ცუდი მარცვალი შეგხვდათ. სცადეთ თავიდან.",
+            bad_bean_title: "ცუდი მარცვალი.",
+            exit_game: "თამაშიდან გასვლა",
             retry: "თავიდან",
             fake_share_btn: "დავპოსტე! მომეცი კოდი.",
             ticket_id: "ბილეთის ID",
@@ -667,7 +672,7 @@ const MenuPage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) =
 
 const ShopPage: React.FC<{ isDark: boolean; addToCart: (item: Product) => void; lang: Lang }> = ({ isDark, addToCart, lang }) => {
     const t = CONTENT[lang].shop;
-    const items = MERCH_ITEMS[lang];
+    const { items } = useShopData(lang);
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-40 pb-20 px-6 md:px-12">
             <div className="max-w-[90rem] mx-auto">
@@ -1095,7 +1100,7 @@ const GamePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) =
                             <Bomb size={80} className="mx-auto mb-6 drop-shadow-lg" />
 
                             <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none mb-4 drop-shadow-md">
-                                BAD<br/>BEAN.
+                                {t.bad_bean_title}
                             </h2>
 
                             <p className="font-bold uppercase tracking-widest opacity-80 mb-10">
@@ -1114,7 +1119,7 @@ const GamePage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) =
                                     onClick={() => { setGameState('idle'); window.scrollTo(0, 0); }}
                                     className="px-12 py-4 rounded-full text-sm font-bold tracking-widest uppercase hover:bg-white/10 transition-colors"
                                 >
-                                    Exit Game
+                                    {t.exit_game}
                                 </button>
                             </div>
                         </motion.div>
@@ -1361,6 +1366,7 @@ const App = () => {
   const theme = isDark ? COLORS.dark : COLORS.light;
   const t = CONTENT[lang];
   const { coffee: coffeeMenu, tea: teaMenu, extra: extraMenu } = useMenuData(lang);
+  const { drinks: featuredDrinks } = useDrinksData(lang);
   useEffect(() => { window.scrollTo(0, 0); trackPageView(location.pathname); }, [location.pathname]);
 
   // Admin page - render without nav/footer
@@ -1510,7 +1516,7 @@ const App = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                       {BEANS_products[lang].map((bean) => (
+                       {featuredDrinks.map((bean) => (
                           <div key={bean.id} className="group cursor-pointer">
                              <div className="aspect-[3/4] rounded-[30px] overflow-hidden mb-6 relative">
                                 <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors z-10"></div>
