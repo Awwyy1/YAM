@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-ro
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, X, Instagram, Sun, Moon, Leaf, Coffee, Globe, ArrowUpRight, MapPin, Clock, Trash2, Gamepad2, Share2, Lock, Trophy, AlertCircle, Bomb, Type, Palette, Layout, Grid, Check, Sparkles, Eye, Camera, MessageSquare, Heart, RefreshCw } from 'lucide-react';
 import AdminPanel from './src/Admin';
+import { useMenuData } from './src/useFirebaseMenu';
 
 // GTM DataLayer integration
 declare global {
@@ -1359,6 +1360,7 @@ const App = () => {
   const [activeDrink, setActiveDrink] = useState<number | null>(null);
   const theme = isDark ? COLORS.dark : COLORS.light;
   const t = CONTENT[lang];
+  const { coffee: coffeeMenu, tea: teaMenu, extra: extraMenu } = useMenuData(lang);
   useEffect(() => { window.scrollTo(0, 0); trackPageView(location.pathname); }, [location.pathname]);
 
   // Admin page - render without nav/footer
@@ -1446,7 +1448,7 @@ const App = () => {
                   {t.home.todays_brew}
                 </h3>
                 <div className="flex flex-col gap-4">
-                  {COFFEE_MENU_DATA[lang].map((item, idx) => (
+                  {coffeeMenu.map((item, idx) => (
                     <motion.div
                         key={idx}
                         onClick={() => setActiveDrink(idx)}
@@ -1464,7 +1466,7 @@ const App = () => {
                   {t.home.tea_title}
                 </h3>
                 <div className="flex flex-col gap-4">
-                  {TEA_MENU_DATA[lang].map((item, idx) => (
+                  {teaMenu.map((item, idx) => (
                     <motion.div
                         key={`tea-${idx}`}
                         className="flex justify-between items-center pb-2 border-b border-current/10 transition-colors duration-300 hover:text-[#FF3B30]"
@@ -1481,7 +1483,7 @@ const App = () => {
                   {t.home.extra_title}
                 </h3>
                 <div className="flex flex-col gap-4">
-                  {EXTRA_MENU_DATA[lang].map((item, idx) => (
+                  {extraMenu.map((item, idx) => (
                     <motion.div
                         key={`extra-${idx}`}
                         className="flex justify-between items-center pb-2 border-b border-current/10 transition-colors duration-300 hover:text-[#FF3B30]"
