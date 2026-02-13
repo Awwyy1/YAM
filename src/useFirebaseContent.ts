@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 
 type Lang = 'en' | 'ge';
@@ -95,6 +95,7 @@ interface BrandContent {
   title_accent_ge: string;
   desc_en: string;
   desc_ge: string;
+  image_url?: string;
   stat1: string;
   stat1_label_en: string;
   stat1_label_ge: string;
@@ -273,7 +274,7 @@ const FALLBACK_BRAND: BrandContent = {
 
 // ============ HOOKS ============
 
-// Menu hook (coffee, tea, extra)
+// Menu hook (coffee, tea, extra) with real-time updates
 export function useMenuData(lang: Lang) {
   const [coffee, setCoffee] = useState<MenuItemSimple[]>(FALLBACK_COFFEE[lang]);
   const [tea, setTea] = useState<MenuItemSimple[]>(FALLBACK_TEA[lang]);
@@ -281,20 +282,18 @@ export function useMenuData(lang: Lang) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
+    let loadingCount = 3;
+    const checkLoading = () => {
+      loadingCount--;
+      if (loadingCount === 0) setIsLoading(false);
+    };
 
-    async function load() {
-      try {
-        const [coffeeSnap, teaSnap, extraSnap] = await Promise.all([
-          getDocs(collection(db, 'menu_coffee')),
-          getDocs(collection(db, 'menu_tea')),
-          getDocs(collection(db, 'menu_extra')),
-        ]);
-
-        if (!mounted) return;
-
+    // Real-time listener for coffee menu
+    const unsubCoffee = onSnapshot(
+      collection(db, 'menu_coffee'),
+      (snapshot) => {
         const coffeeItems: FirebaseMenuItem[] = [];
-        coffeeSnap.forEach(d => coffeeItems.push(d.data() as FirebaseMenuItem));
+        snapshot.forEach(d => coffeeItems.push(d.data() as FirebaseMenuItem));
         if (coffeeItems.length > 0) {
           setCoffee(coffeeItems.sort((a, b) => a.order - b.order).map(i => ({
             name: lang === 'en' ? i.name_en : i.name_ge,
@@ -302,9 +301,17 @@ export function useMenuData(lang: Lang) {
             desc: lang === 'en' ? i.desc_en : i.desc_ge,
           })));
         }
+        checkLoading();
+      },
+      () => checkLoading()
+    );
 
+    // Real-time listener for tea menu
+    const unsubTea = onSnapshot(
+      collection(db, 'menu_tea'),
+      (snapshot) => {
         const teaItems: FirebaseMenuItem[] = [];
-        teaSnap.forEach(d => teaItems.push(d.data() as FirebaseMenuItem));
+        snapshot.forEach(d => teaItems.push(d.data() as FirebaseMenuItem));
         if (teaItems.length > 0) {
           setTea(teaItems.sort((a, b) => a.order - b.order).map(i => ({
             name: lang === 'en' ? i.name_en : i.name_ge,
@@ -312,9 +319,17 @@ export function useMenuData(lang: Lang) {
             desc: lang === 'en' ? i.desc_en : i.desc_ge,
           })));
         }
+        checkLoading();
+      },
+      () => checkLoading()
+    );
 
+    // Real-time listener for extra menu
+    const unsubExtra = onSnapshot(
+      collection(db, 'menu_extra'),
+      (snapshot) => {
         const extraItems: FirebaseMenuItem[] = [];
-        extraSnap.forEach(d => extraItems.push(d.data() as FirebaseMenuItem));
+        snapshot.forEach(d => extraItems.push(d.data() as FirebaseMenuItem));
         if (extraItems.length > 0) {
           setExtra(extraItems.sort((a, b) => a.order - b.order).map(i => ({
             name: lang === 'en' ? i.name_en : i.name_ge,
@@ -322,35 +337,32 @@ export function useMenuData(lang: Lang) {
             desc: lang === 'en' ? i.desc_en : i.desc_ge,
           })));
         }
-      } catch (e) {
-        console.warn('Firebase menu unavailable, using fallback');
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
-    }
+        checkLoading();
+      },
+      () => checkLoading()
+    );
 
-    load();
-    return () => { mounted = false; };
+    return () => {
+      unsubCoffee();
+      unsubTea();
+      unsubExtra();
+    };
   }, [lang]);
 
   return { coffee, tea, extra, isLoading };
 }
 
-// Drinks hook (featured drinks with photos)
+// Drinks hook (featured drinks with photos) with real-time updates
 export function useDrinksData(lang: Lang) {
-  const [drinks, setDrinks] = useState<DrinkItemSimple[]>(FALLBACK_DRINKS[lang]);
+  const [drinks, setDrinks] = useState<DrinkItemSimple[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-
-    async function load() {
-      try {
-        const snap = await getDocs(collection(db, 'drinks'));
-        if (!mounted) return;
-
+    const unsubscribe = onSnapshot(
+      collection(db, 'drinks'),
+      (snapshot) => {
         const items: FirebaseDrinkItem[] = [];
-        snap.forEach(d => items.push(d.data() as FirebaseDrinkItem));
+        snapshot.forEach(d => items.push(d.data() as FirebaseDrinkItem));
 
         if (items.length > 0) {
           setDrinks(items.sort((a, b) => a.order - b.order).map((i, idx) => ({
@@ -359,36 +371,35 @@ export function useDrinksData(lang: Lang) {
             note: lang === 'en' ? i.note_en : i.note_ge,
             img: i.img,
           })));
+        } else {
+          setDrinks(FALLBACK_DRINKS[lang]);
         }
-      } catch (e) {
-        console.warn('Firebase drinks unavailable, using fallback');
-      } finally {
-        if (mounted) setIsLoading(false);
+        setIsLoading(false);
+      },
+      (error) => {
+        console.warn('Firebase drinks unavailable, using fallback:', error);
+        setDrinks(FALLBACK_DRINKS[lang]);
+        setIsLoading(false);
       }
-    }
+    );
 
-    load();
-    return () => { mounted = false; };
+    return () => unsubscribe();
   }, [lang]);
 
   return { drinks, isLoading };
 }
 
-// Shop hook
+// Shop hook with real-time updates
 export function useShopData(lang: Lang) {
-  const [items, setItems] = useState<ShopItemSimple[]>(FALLBACK_SHOP[lang]);
+  const [items, setItems] = useState<ShopItemSimple[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-
-    async function load() {
-      try {
-        const snap = await getDocs(collection(db, 'shop'));
-        if (!mounted) return;
-
+    const unsubscribe = onSnapshot(
+      collection(db, 'shop'),
+      (snapshot) => {
         const shopItems: FirebaseShopItem[] = [];
-        snap.forEach(d => shopItems.push(d.data() as FirebaseShopItem));
+        snapshot.forEach(d => shopItems.push(d.data() as FirebaseShopItem));
 
         if (shopItems.length > 0) {
           setItems(shopItems.sort((a, b) => a.order - b.order).map((i, idx) => ({
@@ -400,22 +411,25 @@ export function useShopData(lang: Lang) {
             desc: lang === 'en' ? i.desc_en : i.desc_ge,
             comingSoon: i.comingSoon,
           })));
+        } else {
+          setItems(FALLBACK_SHOP[lang]);
         }
-      } catch (e) {
-        console.warn('Firebase shop unavailable, using fallback');
-      } finally {
-        if (mounted) setIsLoading(false);
+        setIsLoading(false);
+      },
+      (error) => {
+        console.warn('Firebase shop unavailable, using fallback:', error);
+        setItems(FALLBACK_SHOP[lang]);
+        setIsLoading(false);
       }
-    }
+    );
 
-    load();
-    return () => { mounted = false; };
+    return () => unsubscribe();
   }, [lang]);
 
   return { items, isLoading };
 }
 
-// Hero content hook
+// Hero content hook with real-time updates
 export function useHeroContent(lang: Lang) {
   const [content, setContent] = useState({
     since: lang === 'en' ? FALLBACK_HERO.since_en : FALLBACK_HERO.since_ge,
@@ -426,13 +440,9 @@ export function useHeroContent(lang: Lang) {
   });
 
   useEffect(() => {
-    let mounted = true;
-
-    async function load() {
-      try {
-        const docSnap = await getDoc(doc(db, 'content', 'hero'));
-        if (!mounted) return;
-
+    const unsubscribe = onSnapshot(
+      doc(db, 'content', 'hero'),
+      (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data() as HeroContent;
           setContent({
@@ -443,19 +453,19 @@ export function useHeroContent(lang: Lang) {
             cta: lang === 'en' ? data.cta_en : data.cta_ge,
           });
         }
-      } catch (e) {
-        console.warn('Firebase hero unavailable, using fallback');
+      },
+      (error) => {
+        console.warn('Firebase hero unavailable, using fallback:', error);
       }
-    }
+    );
 
-    load();
-    return () => { mounted = false; };
+    return () => unsubscribe();
   }, [lang]);
 
   return content;
 }
 
-// Contacts hook
+// Contacts hook with real-time updates
 export function useContactsContent(lang: Lang) {
   const [content, setContent] = useState({
     location: lang === 'en' ? FALLBACK_CONTACTS.location_en : FALLBACK_CONTACTS.location_ge,
@@ -466,13 +476,9 @@ export function useContactsContent(lang: Lang) {
   });
 
   useEffect(() => {
-    let mounted = true;
-
-    async function load() {
-      try {
-        const docSnap = await getDoc(doc(db, 'content', 'contacts'));
-        if (!mounted) return;
-
+    const unsubscribe = onSnapshot(
+      doc(db, 'content', 'contacts'),
+      (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data() as ContactsContent;
           setContent({
@@ -483,24 +489,25 @@ export function useContactsContent(lang: Lang) {
             visitDesc: lang === 'en' ? data.visit_desc_en : data.visit_desc_ge,
           });
         }
-      } catch (e) {
-        console.warn('Firebase contacts unavailable, using fallback');
+      },
+      (error) => {
+        console.warn('Firebase contacts unavailable, using fallback:', error);
       }
-    }
+    );
 
-    load();
-    return () => { mounted = false; };
+    return () => unsubscribe();
   }, [lang]);
 
   return content;
 }
 
-// Brand hook
+// Brand hook with real-time updates
 export function useBrandContent(lang: Lang) {
   const [content, setContent] = useState({
     title1: lang === 'en' ? FALLBACK_BRAND.title1_en : FALLBACK_BRAND.title1_ge,
     titleAccent: lang === 'en' ? FALLBACK_BRAND.title_accent_en : FALLBACK_BRAND.title_accent_ge,
     desc: lang === 'en' ? FALLBACK_BRAND.desc_en : FALLBACK_BRAND.desc_ge,
+    imageUrl: '',
     stat1: FALLBACK_BRAND.stat1,
     stat1Label: lang === 'en' ? FALLBACK_BRAND.stat1_label_en : FALLBACK_BRAND.stat1_label_ge,
     stat2: FALLBACK_BRAND.stat2,
@@ -513,19 +520,17 @@ export function useBrandContent(lang: Lang) {
   });
 
   useEffect(() => {
-    let mounted = true;
-
-    async function load() {
-      try {
-        const docSnap = await getDoc(doc(db, 'content', 'brand'));
-        if (!mounted) return;
-
+    // Real-time listener for brand content
+    const unsubscribe = onSnapshot(
+      doc(db, 'content', 'brand'),
+      (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data() as BrandContent;
           setContent({
             title1: lang === 'en' ? data.title1_en : data.title1_ge,
             titleAccent: lang === 'en' ? data.title_accent_en : data.title_accent_ge,
             desc: lang === 'en' ? data.desc_en : data.desc_ge,
+            imageUrl: data.image_url || '',
             stat1: data.stat1,
             stat1Label: lang === 'en' ? data.stat1_label_en : data.stat1_label_ge,
             stat2: data.stat2,
@@ -537,13 +542,13 @@ export function useBrandContent(lang: Lang) {
             ],
           });
         }
-      } catch (e) {
-        console.warn('Firebase brand unavailable, using fallback');
+      },
+      (error) => {
+        console.warn('Firebase brand unavailable, using fallback:', error);
       }
-    }
+    );
 
-    load();
-    return () => { mounted = false; };
+    return () => unsubscribe();
   }, [lang]);
 
   return content;

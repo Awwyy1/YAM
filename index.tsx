@@ -6,6 +6,7 @@ import { ShoppingCart, X, Instagram, Sun, Moon, Leaf, Coffee, Globe, ArrowUpRigh
 import AdminPanel from './src/Admin';
 import { useMenuData } from './src/useFirebaseMenu';
 import { useDrinksData, useShopData, useMarqueeData } from './src/useFirebaseData';
+import { useBrandContent } from './src/useFirebaseContent';
 
 // GTM DataLayer integration
 declare global {
@@ -608,24 +609,37 @@ const PriceDisplay: React.FC<{ price: string; className?: string }> = ({ price, 
 const BrandPage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) => {
   const theme = isDark ? COLORS.dark : COLORS.light;
   const t = CONTENT[lang].brand;
+  const brandContent = useBrandContent(lang);
+
+  // Use Firebase data with fallback to static content
+  const title1 = brandContent.title1 || t.title_1;
+  const titleAccent = brandContent.titleAccent || t.title_accent;
+  const desc = brandContent.desc || t.desc;
+  const stat1 = brandContent.stat1 || t.stat1;
+  const stat1Label = brandContent.stat1Label || t.stat1_label;
+  const stat2 = brandContent.stat2 || t.stat2;
+  const stat2Label = brandContent.stat2Label || t.stat2_label;
+  const features = brandContent.features.length > 0 ? brandContent.features : t.features;
+  const imageUrl = brandContent.imageUrl || "https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=1200&q=80";
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-40 pb-20 px-6 md:px-12 max-w-7xl mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
         <motion.div initial={{ x: -30, opacity: 0 }} whileInView={{ x: 0, opacity: 1 }} viewport={{ once: true }}>
           {t.manifesto_label && <span className="text-[#FF3B30] font-bold tracking-widest text-sm uppercase mb-4 block">{t.manifesto_label}</span>}
-          <h2 className="text-6xl md:text-8xl font-black tracking-tighter leading-none mb-8 uppercase">{t.title_1} <br /> <span className="text-[#FF3B30]">{t.title_accent}</span></h2>
-          <p className="text-xl opacity-70 leading-relaxed mb-10 max-w-lg">{t.desc}</p>
+          <h2 className="text-6xl md:text-8xl font-black tracking-tighter leading-none mb-8 uppercase">{title1} <br /> <span className="text-[#FF3B30]">{titleAccent}</span></h2>
+          <p className="text-xl opacity-70 leading-relaxed mb-10 max-w-lg">{desc}</p>
           <div className="flex gap-10">
-            <div><p className="text-4xl font-black mb-1">{t.stat1}</p><p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">{t.stat1_label}</p></div>
-            <div><p className="text-4xl font-black mb-1">{t.stat2}</p><p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">{t.stat2_label}</p></div>
+            <div><p className="text-4xl font-black mb-1">{stat1}</p><p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">{stat1Label}</p></div>
+            <div><p className="text-4xl font-black mb-1">{stat2}</p><p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">{stat2Label}</p></div>
           </div>
         </motion.div>
         <div className="rounded-[40px] overflow-hidden aspect-[4/5] shadow-xl">
-          <img src="https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=1200&q=80" className="w-full h-full object-cover" alt="Brand" />
+          <img src={imageUrl} className="w-full h-full object-cover" alt="Brand" />
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {t.features.map((item, i) => (
+        {features.map((item, i) => (
           <div key={i} className="p-10 rounded-[30px]" style={{ backgroundColor: theme.card }}>
             <div className="text-[#FF3B30] mb-6">{i === 0 && <Heart />}{i === 1 && <Check />}{i === 2 && <Coffee />}</div>
             <h4 className="text-2xl font-black uppercase">{item.title}</h4>
