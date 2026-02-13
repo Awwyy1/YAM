@@ -9,7 +9,7 @@ import {
 import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { User } from 'firebase/auth';
-import { LogOut, Plus, Trash2, Save, Coffee, Leaf, Cookie, Loader2, AlertCircle, Check, Image, ShoppingBag, Type, MapPin, Sparkles, Upload } from 'lucide-react';
+import { LogOut, Plus, Trash2, Save, Coffee, Leaf, Cookie, Loader2, AlertCircle, Check, Image, ShoppingBag, Type, MapPin, Sparkles, Upload, Sun, Moon, Gamepad2, Eye } from 'lucide-react';
 
 // Types
 interface MenuItem {
@@ -99,7 +99,79 @@ interface BrandContent {
   feature3_text_ge: string;
 }
 
-type Tab = 'menu' | 'drinks' | 'shop' | 'hero' | 'contacts' | 'brand';
+interface GameContent {
+  label_en: string;
+  label_ge: string;
+  title1_en: string;
+  title1_ge: string;
+  title2_en: string;
+  title2_ge: string;
+  title_accent_en: string;
+  title_accent_ge: string;
+  desc_en: string;
+  desc_ge: string;
+  enter_code_en: string;
+  enter_code_ge: string;
+  get_code_en: string;
+  get_code_ge: string;
+  start_en: string;
+  start_ge: string;
+  locked_desc_en: string;
+  locked_desc_ge: string;
+  how_to_unlock_en: string;
+  how_to_unlock_ge: string;
+  step1_en: string;
+  step1_ge: string;
+  step2_en: string;
+  step2_ge: string;
+  step3_en: string;
+  step3_ge: string;
+  have_code_en: string;
+  have_code_ge: string;
+  code_placeholder_en: string;
+  code_placeholder_ge: string;
+  unlock_btn_en: string;
+  unlock_btn_ge: string;
+  row_en: string;
+  row_ge: string;
+  win_title_en: string;
+  win_title_ge: string;
+  win_desc_en: string;
+  win_desc_ge: string;
+  lose_title_en: string;
+  lose_title_ge: string;
+  lose_desc_en: string;
+  lose_desc_ge: string;
+  retry_en: string;
+  retry_ge: string;
+  ticket_id_en: string;
+  ticket_id_ge: string;
+  valid_until_en: string;
+  valid_until_ge: string;
+}
+
+interface OracleContent {
+  label_en: string;
+  label_ge: string;
+  title1_en: string;
+  title1_ge: string;
+  title_accent_en: string;
+  title_accent_ge: string;
+  desc_en: string;
+  desc_ge: string;
+  btn_sip_en: string;
+  btn_sip_ge: string;
+  btn_reading_en: string;
+  btn_reading_ge: string;
+  btn_retry_en: string;
+  btn_retry_ge: string;
+  instruction_en: string;
+  instruction_ge: string;
+  predictions_en: string[];
+  predictions_ge: string[];
+}
+
+type Tab = 'menu' | 'drinks' | 'shop' | 'hero' | 'contacts' | 'brand' | 'game' | 'oracle';
 type MenuCategory = 'coffee' | 'tea' | 'extra';
 
 // Fallback data for initialization
@@ -204,6 +276,120 @@ const INIT_BRAND: BrandContent = {
   feature3_text_ge: 'შემოდი უცხოდ, წადი როგორც მუდმივი.',
 };
 
+const INIT_GAME: GameContent = {
+  label_en: 'YAM TOWER',
+  label_ge: 'YAM TOWER',
+  title1_en: 'PLAY',
+  title1_ge: 'ითამაშე',
+  title2_en: 'TO',
+  title2_ge: 'და',
+  title_accent_en: 'WIN.',
+  title_accent_ge: 'მოიგე.',
+  desc_en: 'Climb 8 rows without hitting a bomb. Reach the top to win a free signature coffee.',
+  desc_ge: 'ავიდეთ 8 საფეხურზე ბომბის გარეშე. მიაღწიეთ მწვერვალს და მიიღეთ უფასო ყავა.',
+  enter_code_en: 'Enter Access Code',
+  enter_code_ge: 'შეიყვანეთ კოდი',
+  get_code_en: 'Get Access Code',
+  get_code_ge: 'მიიღეთ კოდი',
+  start_en: 'Start Game',
+  start_ge: 'დაწყება',
+  locked_desc_en: 'This game is exclusive. Share to unlock.',
+  locked_desc_ge: 'თამაში ექსკლუზიურია. გააზიარეთ გასახსნელად.',
+  how_to_unlock_en: 'How to Unlock',
+  how_to_unlock_ge: 'როგორ გავხსნათ',
+  step1_en: 'Take a screenshot of this page.',
+  step1_ge: 'გადაიღეთ ეკრანის სურათი (Screenshot).',
+  step2_en: 'Post to your Instagram Story & tag @yam.coffee',
+  step2_ge: 'დაპოსტეთ ინსტაგრამ სთორიში და მონიშნეთ @yam.coffee',
+  step3_en: 'We will DM you the daily access code.',
+  step3_ge: 'ჩვენ გამოგიგზავნით დღიურ კოდს პირადში.',
+  have_code_en: 'I have a code',
+  have_code_ge: 'მაქვს კოდი',
+  code_placeholder_en: 'Enter code...',
+  code_placeholder_ge: 'შეიყვანეთ კოდი...',
+  unlock_btn_en: 'Unlock Game',
+  unlock_btn_ge: 'გახსნა',
+  row_en: 'Row',
+  row_ge: 'რიგი',
+  win_title_en: 'YOU WON!',
+  win_title_ge: 'თქვენ მოიგეთ!',
+  win_desc_en: 'Screenshot this ticket and show it to our barista.',
+  win_desc_ge: 'გადაუღეთ ეკრანს სურათი და აჩვენეთ ბარისტას.',
+  lose_title_en: 'BOOM!',
+  lose_title_ge: 'ბუმ!',
+  lose_desc_en: 'You hit a bad bean. Better luck next time.',
+  lose_desc_ge: 'ცუდი მარცვალი შეგხვდათ. სცადეთ თავიდან.',
+  retry_en: 'Try Again',
+  retry_ge: 'თავიდან',
+  ticket_id_en: 'TICKET ID',
+  ticket_id_ge: 'ბილეთის ID',
+  valid_until_en: 'VALID FOR 24H',
+  valid_until_ge: 'აქტიურია 24სთ',
+};
+
+const INIT_ORACLE: OracleContent = {
+  label_en: 'YAM ORACLE',
+  label_ge: 'YAM ორაკული',
+  title1_en: 'DIGITAL',
+  title1_ge: 'ციფრული',
+  title_accent_en: 'FATE.',
+  title_accent_ge: 'ბედი.',
+  desc_en: 'Read your coffee grounds and get a fortune told.',
+  desc_ge: 'იმკითხავე ყავის ნალექზე და მიიღე წინასწარმეტყველება.',
+  btn_sip_en: 'TAKE A SIP',
+  btn_sip_ge: 'მოსვი ყავა',
+  btn_reading_en: 'READING GROUNDS...',
+  btn_reading_ge: 'ვიკვლევ ნალექს...',
+  btn_retry_en: 'CONSULT AGAIN',
+  btn_retry_ge: 'თავიდან',
+  instruction_en: 'Focus on your question...',
+  instruction_ge: 'კონცენტრირდი კითხვაზე...',
+  predictions_en: [
+    'Focus on the grind today. The results will brew.',
+    'Unexpected sweetness is hiding in the bitter moments.',
+    'Your energy is roasting perfectly. Don\'t burn it.',
+    'A bold move will bring a rich finish.',
+    'Let it steep a little longer. Patience is key.',
+    'The sediment settles in your favor today.',
+    'Like a good espresso, keep it short and strong.',
+    'Clarity comes with the next cup.',
+    'The foam of uncertainty will vanish soon.',
+    'Trust your gut, it\'s caffeinated.',
+  ],
+  predictions_ge: [
+    'ფოკუსირდი მთავარზე. შედეგი მოიხარშება.',
+    'მოულოდნელი სიტკბო იმალება სიმწარეში.',
+    'შენი ენერგია იდეალურად იხალება. არ დაწვა.',
+    'თამამი ნაბიჯი მდიდარ გემოს მოიტანს.',
+    'ცოტა ხანს კიდევ დაელოდე. მოთმინება გასაღებია.',
+    'ნალექი შენს სასარგებლოდ ლაგდება.',
+    'კარგი ესპრესოსავით, იყავი მოკლე და ძლიერი.',
+    'სიმკვეთრე შემდეგ ჭიქასთან ერთად მოვა.',
+    'გაურკვევლობის ქაფი მალე გაქრება.',
+    'ენდე ინტუიციას, ის კოფეინითაა სავსე.',
+  ],
+};
+
+// Theme colors
+const THEME = {
+  dark: {
+    bg: '#0A0A0A',
+    card: '#161616',
+    border: '#333',
+    text: '#FFFFFF',
+    textMuted: '#9CA3AF',
+    input: '#0A0A0A',
+  },
+  light: {
+    bg: '#F4F4F2',
+    card: '#FFFFFF',
+    border: '#E5E5E5',
+    text: '#0A0A0A',
+    textMuted: '#6B7280',
+    input: '#FFFFFF',
+  },
+};
+
 // Image upload component
 const ImageUpload: React.FC<{
   currentUrl: string;
@@ -282,10 +468,30 @@ const AdminPanel: React.FC = () => {
   const [hero, setHero] = useState<HeroContent>(INIT_HERO);
   const [contacts, setContacts] = useState<ContactsContent>(INIT_CONTACTS);
   const [brand, setBrand] = useState<BrandContent>(INIT_BRAND);
+  const [game, setGame] = useState<GameContent>(INIT_GAME);
+  const [oracle, setOracle] = useState<OracleContent>(INIT_ORACLE);
 
   const [saving, setSaving] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
+
+  // Theme state - read from localStorage
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('admin-theme');
+      return saved !== 'light';
+    }
+    return true;
+  });
+  const theme = isDark ? THEME.dark : THEME.light;
+
+  const toggleTheme = () => {
+    setIsDark(prev => {
+      const newValue = !prev;
+      localStorage.setItem('admin-theme', newValue ? 'dark' : 'light');
+      return newValue;
+    });
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthChange((u) => {
@@ -332,6 +538,16 @@ const AdminPanel: React.FC = () => {
         const snap = await getDocs(collection(db, 'content'));
         snap.forEach((doc) => {
           if (doc.id === 'brand') setBrand(doc.data() as BrandContent);
+        });
+      } else if (activeTab === 'game') {
+        const snap = await getDocs(collection(db, 'content'));
+        snap.forEach((doc) => {
+          if (doc.id === 'game') setGame(doc.data() as GameContent);
+        });
+      } else if (activeTab === 'oracle') {
+        const snap = await getDocs(collection(db, 'content'));
+        snap.forEach((doc) => {
+          if (doc.id === 'oracle') setOracle(doc.data() as OracleContent);
         });
       }
     } catch (error) {
@@ -525,6 +741,28 @@ const AdminPanel: React.FC = () => {
     setSaving(null);
   };
 
+  const saveGame = async () => {
+    setSaving('game');
+    try {
+      await setDoc(doc(db, 'content', 'game'), game);
+      showMessage('success', 'Saved!');
+    } catch (error: any) {
+      showMessage('error', error.message);
+    }
+    setSaving(null);
+  };
+
+  const saveOracle = async () => {
+    setSaving('oracle');
+    try {
+      await setDoc(doc(db, 'content', 'oracle'), oracle);
+      showMessage('success', 'Saved!');
+    } catch (error: any) {
+      showMessage('error', error.message);
+    }
+    setSaving(null);
+  };
+
   // Initialize all data
   const initializeAllData = async () => {
     if (!confirm('Initialize all data? This will populate Firebase with default content.')) return;
@@ -552,6 +790,8 @@ const AdminPanel: React.FC = () => {
       await setDoc(doc(db, 'content', 'hero'), INIT_HERO);
       await setDoc(doc(db, 'content', 'contacts'), INIT_CONTACTS);
       await setDoc(doc(db, 'content', 'brand'), INIT_BRAND);
+      await setDoc(doc(db, 'content', 'game'), INIT_GAME);
+      await setDoc(doc(db, 'content', 'oracle'), INIT_ORACLE);
 
       showMessage('success', 'All data initialized!');
       loadData();
@@ -657,6 +897,8 @@ const AdminPanel: React.FC = () => {
               { id: 'hero', icon: Type, label: 'Hero' },
               { id: 'contacts', icon: MapPin, label: 'Contacts' },
               { id: 'brand', icon: Sparkles, label: 'Brand' },
+              { id: 'game', icon: Gamepad2, label: 'Game' },
+              { id: 'oracle', icon: Eye, label: 'Oracle' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -1157,6 +1399,464 @@ const AdminPanel: React.FC = () => {
                 <button onClick={saveBrand} disabled={saving === 'brand'} className="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
                   {saving === 'brand' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Save Brand
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Game Tab */}
+        {activeTab === 'game' && (
+          <div className="space-y-6">
+            <p className="text-gray-500 text-sm">YAM Tower game content</p>
+            <div className="p-4 bg-[#161616] rounded-lg border border-gray-800 space-y-4">
+              {/* Title Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Label (EN)</label>
+                  <input type="text" value={game.label_en} onChange={(e) => setGame({ ...game, label_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Label (GE)</label>
+                  <input type="text" value={game.label_ge} onChange={(e) => setGame({ ...game, label_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title Line 1 (EN)</label>
+                  <input type="text" value={game.title1_en} onChange={(e) => setGame({ ...game, title1_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title Line 1 (GE)</label>
+                  <input type="text" value={game.title1_ge} onChange={(e) => setGame({ ...game, title1_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title Line 2 (EN)</label>
+                  <input type="text" value={game.title2_en} onChange={(e) => setGame({ ...game, title2_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title Line 2 (GE)</label>
+                  <input type="text" value={game.title2_ge} onChange={(e) => setGame({ ...game, title2_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title Accent (EN)</label>
+                  <input type="text" value={game.title_accent_en} onChange={(e) => setGame({ ...game, title_accent_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title Accent (GE)</label>
+                  <input type="text" value={game.title_accent_ge} onChange={(e) => setGame({ ...game, title_accent_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Description (EN)</label>
+                  <textarea value={game.desc_en} onChange={(e) => setGame({ ...game, desc_en: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Description (GE)</label>
+                  <textarea value={game.desc_ge} onChange={(e) => setGame({ ...game, desc_ge: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+
+              {/* Unlock Section */}
+              <div className="border-t border-gray-800 pt-4 mt-4">
+                <h4 className="text-sm font-bold text-gray-400 mb-4">Unlock / Access Code</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Enter Code (EN)</label>
+                    <input type="text" value={game.enter_code_en} onChange={(e) => setGame({ ...game, enter_code_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Enter Code (GE)</label>
+                    <input type="text" value={game.enter_code_ge} onChange={(e) => setGame({ ...game, enter_code_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Get Code (EN)</label>
+                    <input type="text" value={game.get_code_en} onChange={(e) => setGame({ ...game, get_code_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Get Code (GE)</label>
+                    <input type="text" value={game.get_code_ge} onChange={(e) => setGame({ ...game, get_code_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Locked Desc (EN)</label>
+                    <textarea value={game.locked_desc_en} onChange={(e) => setGame({ ...game, locked_desc_en: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Locked Desc (GE)</label>
+                    <textarea value={game.locked_desc_ge} onChange={(e) => setGame({ ...game, locked_desc_ge: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+              </div>
+
+              {/* How to Unlock Steps */}
+              <div className="border-t border-gray-800 pt-4 mt-4">
+                <h4 className="text-sm font-bold text-gray-400 mb-4">How to Unlock Steps</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">How to Unlock Title (EN)</label>
+                    <input type="text" value={game.how_to_unlock_en} onChange={(e) => setGame({ ...game, how_to_unlock_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">How to Unlock Title (GE)</label>
+                    <input type="text" value={game.how_to_unlock_ge} onChange={(e) => setGame({ ...game, how_to_unlock_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+                {[1, 2, 3].map((num) => (
+                  <div key={num} className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500 uppercase">Step {num} (EN)</label>
+                      <input
+                        type="text"
+                        value={(game as any)[`step${num}_en`]}
+                        onChange={(e) => setGame({ ...game, [`step${num}_en`]: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500 uppercase">Step {num} (GE)</label>
+                      <input
+                        type="text"
+                        value={(game as any)[`step${num}_ge`]}
+                        onChange={(e) => setGame({ ...game, [`step${num}_ge`]: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Code Input */}
+              <div className="border-t border-gray-800 pt-4 mt-4">
+                <h4 className="text-sm font-bold text-gray-400 mb-4">Code Input</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Have Code (EN)</label>
+                    <input type="text" value={game.have_code_en} onChange={(e) => setGame({ ...game, have_code_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Have Code (GE)</label>
+                    <input type="text" value={game.have_code_ge} onChange={(e) => setGame({ ...game, have_code_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Code Placeholder (EN)</label>
+                    <input type="text" value={game.code_placeholder_en} onChange={(e) => setGame({ ...game, code_placeholder_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Code Placeholder (GE)</label>
+                    <input type="text" value={game.code_placeholder_ge} onChange={(e) => setGame({ ...game, code_placeholder_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Unlock Button (EN)</label>
+                    <input type="text" value={game.unlock_btn_en} onChange={(e) => setGame({ ...game, unlock_btn_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Unlock Button (GE)</label>
+                    <input type="text" value={game.unlock_btn_ge} onChange={(e) => setGame({ ...game, unlock_btn_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Game Buttons */}
+              <div className="border-t border-gray-800 pt-4 mt-4">
+                <h4 className="text-sm font-bold text-gray-400 mb-4">Game UI</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Start Button (EN)</label>
+                    <input type="text" value={game.start_en} onChange={(e) => setGame({ ...game, start_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Start Button (GE)</label>
+                    <input type="text" value={game.start_ge} onChange={(e) => setGame({ ...game, start_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Row (EN)</label>
+                    <input type="text" value={game.row_en} onChange={(e) => setGame({ ...game, row_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Row (GE)</label>
+                    <input type="text" value={game.row_ge} onChange={(e) => setGame({ ...game, row_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Retry Button (EN)</label>
+                    <input type="text" value={game.retry_en} onChange={(e) => setGame({ ...game, retry_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Retry Button (GE)</label>
+                    <input type="text" value={game.retry_ge} onChange={(e) => setGame({ ...game, retry_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Win/Lose Messages */}
+              <div className="border-t border-gray-800 pt-4 mt-4">
+                <h4 className="text-sm font-bold text-gray-400 mb-4">Win/Lose Messages</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Win Title (EN)</label>
+                    <input type="text" value={game.win_title_en} onChange={(e) => setGame({ ...game, win_title_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Win Title (GE)</label>
+                    <input type="text" value={game.win_title_ge} onChange={(e) => setGame({ ...game, win_title_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Win Desc (EN)</label>
+                    <textarea value={game.win_desc_en} onChange={(e) => setGame({ ...game, win_desc_en: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Win Desc (GE)</label>
+                    <textarea value={game.win_desc_ge} onChange={(e) => setGame({ ...game, win_desc_ge: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Lose Title (EN)</label>
+                    <input type="text" value={game.lose_title_en} onChange={(e) => setGame({ ...game, lose_title_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Lose Title (GE)</label>
+                    <input type="text" value={game.lose_title_ge} onChange={(e) => setGame({ ...game, lose_title_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Lose Desc (EN)</label>
+                    <textarea value={game.lose_desc_en} onChange={(e) => setGame({ ...game, lose_desc_en: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Lose Desc (GE)</label>
+                    <textarea value={game.lose_desc_ge} onChange={(e) => setGame({ ...game, lose_desc_ge: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Ticket */}
+              <div className="border-t border-gray-800 pt-4 mt-4">
+                <h4 className="text-sm font-bold text-gray-400 mb-4">Ticket</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Ticket ID Label (EN)</label>
+                    <input type="text" value={game.ticket_id_en} onChange={(e) => setGame({ ...game, ticket_id_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Ticket ID Label (GE)</label>
+                    <input type="text" value={game.ticket_id_ge} onChange={(e) => setGame({ ...game, ticket_id_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Valid Until (EN)</label>
+                    <input type="text" value={game.valid_until_en} onChange={(e) => setGame({ ...game, valid_until_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Valid Until (GE)</label>
+                    <input type="text" value={game.valid_until_ge} onChange={(e) => setGame({ ...game, valid_until_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t border-gray-800">
+                <button onClick={saveGame} disabled={saving === 'game'} className="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
+                  {saving === 'game' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Save Game
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Oracle Tab */}
+        {activeTab === 'oracle' && (
+          <div className="space-y-6">
+            <p className="text-gray-500 text-sm">YAM Oracle fortune teller content</p>
+            <div className="p-4 bg-[#161616] rounded-lg border border-gray-800 space-y-4">
+              {/* Title Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Label (EN)</label>
+                  <input type="text" value={oracle.label_en} onChange={(e) => setOracle({ ...oracle, label_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Label (GE)</label>
+                  <input type="text" value={oracle.label_ge} onChange={(e) => setOracle({ ...oracle, label_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title Line 1 (EN)</label>
+                  <input type="text" value={oracle.title1_en} onChange={(e) => setOracle({ ...oracle, title1_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title Line 1 (GE)</label>
+                  <input type="text" value={oracle.title1_ge} onChange={(e) => setOracle({ ...oracle, title1_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title Accent (EN)</label>
+                  <input type="text" value={oracle.title_accent_en} onChange={(e) => setOracle({ ...oracle, title_accent_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Title Accent (GE)</label>
+                  <input type="text" value={oracle.title_accent_ge} onChange={(e) => setOracle({ ...oracle, title_accent_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Description (EN)</label>
+                  <textarea value={oracle.desc_en} onChange={(e) => setOracle({ ...oracle, desc_en: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase">Description (GE)</label>
+                  <textarea value={oracle.desc_ge} onChange={(e) => setOracle({ ...oracle, desc_ge: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="border-t border-gray-800 pt-4 mt-4">
+                <h4 className="text-sm font-bold text-gray-400 mb-4">Buttons</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Sip Button (EN)</label>
+                    <input type="text" value={oracle.btn_sip_en} onChange={(e) => setOracle({ ...oracle, btn_sip_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Sip Button (GE)</label>
+                    <input type="text" value={oracle.btn_sip_ge} onChange={(e) => setOracle({ ...oracle, btn_sip_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Reading Button (EN)</label>
+                    <input type="text" value={oracle.btn_reading_en} onChange={(e) => setOracle({ ...oracle, btn_reading_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Reading Button (GE)</label>
+                    <input type="text" value={oracle.btn_reading_ge} onChange={(e) => setOracle({ ...oracle, btn_reading_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Retry Button (EN)</label>
+                    <input type="text" value={oracle.btn_retry_en} onChange={(e) => setOracle({ ...oracle, btn_retry_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Retry Button (GE)</label>
+                    <input type="text" value={oracle.btn_retry_ge} onChange={(e) => setOracle({ ...oracle, btn_retry_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Instruction */}
+              <div className="border-t border-gray-800 pt-4 mt-4">
+                <h4 className="text-sm font-bold text-gray-400 mb-4">Instruction</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Instruction (EN)</label>
+                    <input type="text" value={oracle.instruction_en} onChange={(e) => setOracle({ ...oracle, instruction_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500 uppercase">Instruction (GE)</label>
+                    <input type="text" value={oracle.instruction_ge} onChange={(e) => setOracle({ ...oracle, instruction_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Predictions */}
+              <div className="border-t border-gray-800 pt-4 mt-4">
+                <h4 className="text-sm font-bold text-gray-400 mb-4">Predictions (EN)</h4>
+                <div className="space-y-2">
+                  {oracle.predictions_en.map((prediction, index) => (
+                    <div key={index} className="flex gap-2">
+                      <span className="text-gray-500 text-sm w-6">{index + 1}.</span>
+                      <input
+                        type="text"
+                        value={prediction}
+                        onChange={(e) => {
+                          const newPredictions = [...oracle.predictions_en];
+                          newPredictions[index] = e.target.value;
+                          setOracle({ ...oracle, predictions_en: newPredictions });
+                        }}
+                        className="flex-1 px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                      <button
+                        onClick={() => {
+                          const newPredictions = oracle.predictions_en.filter((_, i) => i !== index);
+                          const newPredictionsGe = oracle.predictions_ge.filter((_, i) => i !== index);
+                          setOracle({ ...oracle, predictions_en: newPredictions, predictions_ge: newPredictionsGe });
+                        }}
+                        className="px-2 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => {
+                      setOracle({
+                        ...oracle,
+                        predictions_en: [...oracle.predictions_en, 'New prediction...'],
+                        predictions_ge: [...oracle.predictions_ge, 'ახალი წინასწარმეტყველება...']
+                      });
+                    }}
+                    className="mt-2 w-full py-2 border-2 border-dashed border-gray-700 rounded text-gray-500 hover:text-white hover:border-[#FF3B30] transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" /> Add Prediction
+                  </button>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-800 pt-4 mt-4">
+                <h4 className="text-sm font-bold text-gray-400 mb-4">Predictions (GE)</h4>
+                <div className="space-y-2">
+                  {oracle.predictions_ge.map((prediction, index) => (
+                    <div key={index} className="flex gap-2">
+                      <span className="text-gray-500 text-sm w-6">{index + 1}.</span>
+                      <input
+                        type="text"
+                        value={prediction}
+                        onChange={(e) => {
+                          const newPredictions = [...oracle.predictions_ge];
+                          newPredictions[index] = e.target.value;
+                          setOracle({ ...oracle, predictions_ge: newPredictions });
+                        }}
+                        className="flex-1 px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t border-gray-800">
+                <button onClick={saveOracle} disabled={saving === 'oracle'} className="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
+                  {saving === 'oracle' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Save Oracle
                 </button>
               </div>
             </div>
