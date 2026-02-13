@@ -142,6 +142,10 @@ interface GameContent {
   lose_title_ge: string;
   lose_desc_en: string;
   lose_desc_ge: string;
+  bad_bean_title_en: string;
+  bad_bean_title_ge: string;
+  exit_game_en: string;
+  exit_game_ge: string;
   retry_en: string;
   retry_ge: string;
   ticket_id_en: string;
@@ -319,6 +323,10 @@ const INIT_GAME: GameContent = {
   lose_title_ge: 'ბუმ!',
   lose_desc_en: 'You hit a bad bean. Better luck next time.',
   lose_desc_ge: 'ცუდი მარცვალი შეგხვდათ. სცადეთ თავიდან.',
+  bad_bean_title_en: 'BAD BEAN.',
+  bad_bean_title_ge: 'ცუდი მარცვალი.',
+  exit_game_en: 'Exit Game',
+  exit_game_ge: 'თამაშიდან გასვლა',
   retry_en: 'Try Again',
   retry_ge: 'თავიდან',
   ticket_id_en: 'TICKET ID',
@@ -396,7 +404,8 @@ const ImageUpload: React.FC<{
   onUpload: (url: string) => void;
   folder: string;
   id: string;
-}> = ({ currentUrl, onUpload, folder, id }) => {
+  theme?: typeof THEME.dark;
+}> = ({ currentUrl, onUpload, folder, id, theme = THEME.dark }) => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -419,7 +428,7 @@ const ImageUpload: React.FC<{
 
   return (
     <div className="space-y-2">
-      <label className="text-xs text-gray-500 uppercase">Image</label>
+      <label className="text-xs uppercase" style={{ color: theme.textMuted }}>Image</label>
       <div className="flex gap-3 items-center">
         {currentUrl && (
           <img src={currentUrl} alt="" className="w-16 h-16 object-cover rounded" />
@@ -434,7 +443,8 @@ const ImageUpload: React.FC<{
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          className="flex items-center gap-2 px-3 py-2 bg-[#0A0A0A] border border-gray-700 rounded text-sm hover:border-[#FF3B30] transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-2 rounded text-sm hover:border-[#FF3B30] transition-colors disabled:opacity-50"
+          style={{ backgroundColor: theme.input, border: `1px solid ${theme.border}`, color: theme.text }}
         >
           {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
           {uploading ? 'Uploading...' : 'Upload'}
@@ -445,7 +455,8 @@ const ImageUpload: React.FC<{
         value={currentUrl}
         onChange={(e) => onUpload(e.target.value)}
         placeholder="Or paste image URL..."
-        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white text-sm focus:outline-none focus:border-[#FF3B30]"
+        className="w-full px-3 py-2 rounded text-sm focus:outline-none focus:border-[#FF3B30]"
+        style={{ backgroundColor: theme.input, border: `1px solid ${theme.border}`, color: theme.text }}
       />
     </div>
   );
@@ -848,28 +859,50 @@ const AdminPanel: React.FC = () => {
     );
   }
 
+  // Common input styles
+  const inputStyle = {
+    backgroundColor: theme.input,
+    border: `1px solid ${theme.border}`,
+    color: theme.text,
+  };
+  const cardStyle = {
+    backgroundColor: theme.card,
+    border: `1px solid ${theme.border}`,
+  };
+  const labelStyle = { color: theme.textMuted };
+
   // Admin Dashboard
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white">
+    <div className="min-h-screen transition-colors duration-300" style={{ backgroundColor: theme.bg, color: theme.text }}>
       {/* Header */}
-      <header className="border-b border-gray-800 px-4 py-4">
+      <header className="border-b px-4 py-4" style={{ borderColor: theme.border }}>
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-xl font-black tracking-tight">YAM Admin</h1>
-            <p className="text-gray-500 text-sm">{user.email}</p>
+            <p className="text-sm" style={{ color: theme.textMuted }}>{user.email}</p>
           </div>
           <div className="flex items-center gap-4">
             <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg transition-colors"
+              style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}` }}
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <button
               onClick={initializeAllData}
               disabled={isInitializing}
-              className="flex items-center gap-2 px-3 py-2 text-xs bg-[#161616] border border-gray-700 rounded hover:border-[#FF3B30] transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-2 text-xs rounded hover:border-[#FF3B30] transition-colors disabled:opacity-50"
+              style={{ backgroundColor: theme.card, border: `1px solid ${theme.border}` }}
             >
               {isInitializing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
               Init All Data
             </button>
             <button
               onClick={() => logoutAdmin()}
-              className="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white transition-colors"
+              className="flex items-center gap-2 px-3 py-2 transition-colors"
+              style={{ color: theme.textMuted }}
             >
               <LogOut className="w-4 h-4" />
               Logout
@@ -887,7 +920,7 @@ const AdminPanel: React.FC = () => {
       )}
 
       {/* Main Tabs */}
-      <div className="border-b border-gray-800">
+      <div className="border-b" style={{ borderColor: theme.border }}>
         <div className="max-w-5xl mx-auto px-4">
           <div className="flex gap-1 overflow-x-auto py-2">
             {[
@@ -903,9 +936,11 @@ const AdminPanel: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as Tab)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-colors ${
-                  activeTab === tab.id ? 'bg-[#FF3B30] text-white' : 'text-gray-400 hover:text-white hover:bg-[#161616]'
-                }`}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-colors"
+                style={{
+                  backgroundColor: activeTab === tab.id ? '#FF3B30' : 'transparent',
+                  color: activeTab === tab.id ? '#FFFFFF' : theme.textMuted,
+                }}
               >
                 <tab.icon className="w-4 h-4" />
                 {tab.label}
@@ -925,9 +960,11 @@ const AdminPanel: React.FC = () => {
                 <button
                   key={cat}
                   onClick={() => setMenuCategory(cat)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                    menuCategory === cat ? 'bg-[#333] text-white' : 'text-gray-500 hover:text-white'
-                  }`}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors"
+                  style={{
+                    backgroundColor: menuCategory === cat ? theme.border : 'transparent',
+                    color: menuCategory === cat ? theme.text : theme.textMuted,
+                  }}
                 >
                   {cat === 'coffee' && <Coffee className="w-4 h-4" />}
                   {cat === 'tea' && <Leaf className="w-4 h-4" />}
@@ -939,49 +976,49 @@ const AdminPanel: React.FC = () => {
 
             <div className="space-y-4">
               {menuItems.map((item) => (
-                <div key={item.id} className="p-4 bg-[#161616] rounded-lg border border-gray-800">
+                <div key={item.id} className="p-4 rounded-lg" style={cardStyle}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-xs text-gray-500 uppercase">Name (EN)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Name (EN)</label>
                       <input
                         type="text"
                         value={item.name_en}
                         onChange={(e) => setMenuItems(items => items.map(i => i.id === item.id ? { ...i, name_en: e.target.value } : i))}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
-                      <label className="text-xs text-gray-500 uppercase">Description (EN)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Description (EN)</label>
                       <input
                         type="text"
                         value={item.desc_en}
                         onChange={(e) => setMenuItems(items => items.map(i => i.id === item.id ? { ...i, desc_en: e.target.value } : i))}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs text-gray-500 uppercase">Name (GE)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Name (GE)</label>
                       <input
                         type="text"
                         value={item.name_ge}
                         onChange={(e) => setMenuItems(items => items.map(i => i.id === item.id ? { ...i, name_ge: e.target.value } : i))}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
-                      <label className="text-xs text-gray-500 uppercase">Description (GE)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Description (GE)</label>
                       <input
                         type="text"
                         value={item.desc_ge}
                         onChange={(e) => setMenuItems(items => items.map(i => i.id === item.id ? { ...i, desc_ge: e.target.value } : i))}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-800">
+                  <div className="flex items-center gap-4 mt-4 pt-4 border-t" style={{ borderColor: theme.border }}>
                     <div className="flex-1">
-                      <label className="text-xs text-gray-500 uppercase">Price</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Price</label>
                       <input
                         type="text"
                         value={item.price}
                         onChange={(e) => setMenuItems(items => items.map(i => i.id === item.id ? { ...i, price: e.target.value } : i))}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
                     </div>
                     <div className="flex gap-2 pt-5">
@@ -997,7 +1034,7 @@ const AdminPanel: React.FC = () => {
                 </div>
               ))}
             </div>
-            <button onClick={addMenuItem} className="mt-4 w-full py-3 border-2 border-dashed border-gray-700 rounded-lg text-gray-500 hover:text-white hover:border-[#FF3B30] transition-colors flex items-center justify-center gap-2">
+            <button onClick={addMenuItem} className="mt-4 w-full py-3 border-2 border-dashed rounded-lg hover:border-[#FF3B30] transition-colors flex items-center justify-center gap-2" style={{ borderColor: theme.border, color: theme.textMuted }}>
               <Plus className="w-5 h-5" /> Add Item
             </button>
           </>
@@ -1006,41 +1043,41 @@ const AdminPanel: React.FC = () => {
         {/* Drinks Tab */}
         {activeTab === 'drinks' && (
           <>
-            <p className="text-gray-500 text-sm mb-6">Featured drinks on homepage with photos</p>
+            <p className="text-sm mb-6" style={{ color: theme.textMuted }}>Featured drinks on homepage with photos</p>
             <div className="space-y-4">
               {drinks.map((item) => (
-                <div key={item.id} className="p-4 bg-[#161616] rounded-lg border border-gray-800">
+                <div key={item.id} className="p-4 rounded-lg" style={cardStyle}>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <label className="text-xs text-gray-500 uppercase">Name (EN)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Name (EN)</label>
                       <input
                         type="text"
                         value={item.name_en}
                         onChange={(e) => setDrinks(items => items.map(i => i.id === item.id ? { ...i, name_en: e.target.value } : i))}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
-                      <label className="text-xs text-gray-500 uppercase">Note (EN)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Note (EN)</label>
                       <input
                         type="text"
                         value={item.note_en}
                         onChange={(e) => setDrinks(items => items.map(i => i.id === item.id ? { ...i, note_en: e.target.value } : i))}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs text-gray-500 uppercase">Name (GE)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Name (GE)</label>
                       <input
                         type="text"
                         value={item.name_ge}
                         onChange={(e) => setDrinks(items => items.map(i => i.id === item.id ? { ...i, name_ge: e.target.value } : i))}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
-                      <label className="text-xs text-gray-500 uppercase">Note (GE)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Note (GE)</label>
                       <input
                         type="text"
                         value={item.note_ge}
                         onChange={(e) => setDrinks(items => items.map(i => i.id === item.id ? { ...i, note_ge: e.target.value } : i))}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
                     </div>
                     <div>
@@ -1049,10 +1086,11 @@ const AdminPanel: React.FC = () => {
                         onUpload={(url) => setDrinks(items => items.map(i => i.id === item.id ? { ...i, img: url } : i))}
                         folder="drinks"
                         id={item.id}
+                        theme={theme}
                       />
                     </div>
                   </div>
-                  <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-800">
+                  <div className="flex justify-end gap-2 mt-4 pt-4 border-t" style={{ borderColor: theme.border }}>
                     <button onClick={() => saveDrink(item)} disabled={saving === item.id} className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
                       {saving === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                       Save
@@ -1064,7 +1102,7 @@ const AdminPanel: React.FC = () => {
                 </div>
               ))}
             </div>
-            <button onClick={addDrink} className="mt-4 w-full py-3 border-2 border-dashed border-gray-700 rounded-lg text-gray-500 hover:text-white hover:border-[#FF3B30] transition-colors flex items-center justify-center gap-2">
+            <button onClick={addDrink} className="mt-4 w-full py-3 border-2 border-dashed rounded-lg hover:border-[#FF3B30] transition-colors flex items-center justify-center gap-2" style={{ borderColor: theme.border, color: theme.textMuted }}>
               <Plus className="w-5 h-5" /> Add Drink
             </button>
           </>
@@ -1073,55 +1111,55 @@ const AdminPanel: React.FC = () => {
         {/* Shop Tab */}
         {activeTab === 'shop' && (
           <>
-            <p className="text-gray-500 text-sm mb-6">Merchandise items</p>
+            <p className="text-sm mb-6" style={{ color: theme.textMuted }}>Merchandise items</p>
             <div className="space-y-4">
               {shopItems.map((item) => (
-                <div key={item.id} className="p-4 bg-[#161616] rounded-lg border border-gray-800">
+                <div key={item.id} className="p-4 rounded-lg" style={cardStyle}>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <label className="text-xs text-gray-500 uppercase">Name (EN)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Name (EN)</label>
                       <input
                         type="text"
                         value={item.name_en}
                         onChange={(e) => setShopItems(items => items.map(i => i.id === item.id ? { ...i, name_en: e.target.value } : i))}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
-                      <label className="text-xs text-gray-500 uppercase">Color (EN)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Color (EN)</label>
                       <input
                         type="text"
                         value={item.color_en}
                         onChange={(e) => setShopItems(items => items.map(i => i.id === item.id ? { ...i, color_en: e.target.value } : i))}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
-                      <label className="text-xs text-gray-500 uppercase">Description (EN)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Description (EN)</label>
                       <input
                         type="text"
                         value={item.desc_en}
                         onChange={(e) => setShopItems(items => items.map(i => i.id === item.id ? { ...i, desc_en: e.target.value } : i))}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs text-gray-500 uppercase">Name (GE)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Name (GE)</label>
                       <input
                         type="text"
                         value={item.name_ge}
                         onChange={(e) => setShopItems(items => items.map(i => i.id === item.id ? { ...i, name_ge: e.target.value } : i))}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
-                      <label className="text-xs text-gray-500 uppercase">Color (GE)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Color (GE)</label>
                       <input
                         type="text"
                         value={item.color_ge}
                         onChange={(e) => setShopItems(items => items.map(i => i.id === item.id ? { ...i, color_ge: e.target.value } : i))}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
-                      <label className="text-xs text-gray-500 uppercase">Description (GE)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Description (GE)</label>
                       <input
                         type="text"
                         value={item.desc_ge}
                         onChange={(e) => setShopItems(items => items.map(i => i.id === item.id ? { ...i, desc_ge: e.target.value } : i))}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
                     </div>
                     <div className="space-y-2">
@@ -1130,13 +1168,14 @@ const AdminPanel: React.FC = () => {
                         onUpload={(url) => setShopItems(items => items.map(i => i.id === item.id ? { ...i, img: url } : i))}
                         folder="shop"
                         id={item.id}
+                        theme={theme}
                       />
-                      <label className="text-xs text-gray-500 uppercase">Price</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Price</label>
                       <input
                         type="text"
                         value={item.price}
                         onChange={(e) => setShopItems(items => items.map(i => i.id === item.id ? { ...i, price: e.target.value } : i))}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
                       <label className="flex items-center gap-2 cursor-pointer mt-2">
                         <input
@@ -1145,11 +1184,11 @@ const AdminPanel: React.FC = () => {
                           onChange={(e) => setShopItems(items => items.map(i => i.id === item.id ? { ...i, comingSoon: e.target.checked } : i))}
                           className="w-4 h-4"
                         />
-                        <span className="text-sm text-gray-400">Coming Soon</span>
+                        <span className="text-sm" style={{ color: theme.textMuted }}>Coming Soon</span>
                       </label>
                     </div>
                   </div>
-                  <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-800">
+                  <div className="flex justify-end gap-2 mt-4 pt-4 border-t" style={{ borderColor: theme.border }}>
                     <button onClick={() => saveShopItem(item)} disabled={saving === item.id} className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
                       {saving === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                       Save
@@ -1161,7 +1200,7 @@ const AdminPanel: React.FC = () => {
                 </div>
               ))}
             </div>
-            <button onClick={addShopItem} className="mt-4 w-full py-3 border-2 border-dashed border-gray-700 rounded-lg text-gray-500 hover:text-white hover:border-[#FF3B30] transition-colors flex items-center justify-center gap-2">
+            <button onClick={addShopItem} className="mt-4 w-full py-3 border-2 border-dashed rounded-lg hover:border-[#FF3B30] transition-colors flex items-center justify-center gap-2" style={{ borderColor: theme.border, color: theme.textMuted }}>
               <Plus className="w-5 h-5" /> Add Item
             </button>
           </>
@@ -1174,55 +1213,55 @@ const AdminPanel: React.FC = () => {
             <div className="p-4 bg-[#161616] rounded-lg border border-gray-800 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Since (EN)</label>
-                  <input type="text" value={hero.since_en} onChange={(e) => setHero({ ...hero, since_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Since (EN)</label>
+                  <input type="text" value={hero.since_en} onChange={(e) => setHero({ ...hero, since_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Since (GE)</label>
-                  <input type="text" value={hero.since_ge} onChange={(e) => setHero({ ...hero, since_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Since (GE)</label>
+                  <input type="text" value={hero.since_ge} onChange={(e) => setHero({ ...hero, since_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title Line 1 (EN)</label>
-                  <input type="text" value={hero.title1_en} onChange={(e) => setHero({ ...hero, title1_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Title Line 1 (EN)</label>
+                  <input type="text" value={hero.title1_en} onChange={(e) => setHero({ ...hero, title1_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title Line 1 (GE)</label>
-                  <input type="text" value={hero.title1_ge} onChange={(e) => setHero({ ...hero, title1_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Title Line 1 (GE)</label>
+                  <input type="text" value={hero.title1_ge} onChange={(e) => setHero({ ...hero, title1_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title Line 2 (EN)</label>
-                  <input type="text" value={hero.title2_en} onChange={(e) => setHero({ ...hero, title2_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Title Line 2 (EN)</label>
+                  <input type="text" value={hero.title2_en} onChange={(e) => setHero({ ...hero, title2_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title Line 2 (GE)</label>
-                  <input type="text" value={hero.title2_ge} onChange={(e) => setHero({ ...hero, title2_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Title Line 2 (GE)</label>
+                  <input type="text" value={hero.title2_ge} onChange={(e) => setHero({ ...hero, title2_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title Line 3 (EN)</label>
-                  <input type="text" value={hero.title3_en} onChange={(e) => setHero({ ...hero, title3_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Title Line 3 (EN)</label>
+                  <input type="text" value={hero.title3_en} onChange={(e) => setHero({ ...hero, title3_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title Line 3 (GE)</label>
-                  <input type="text" value={hero.title3_ge} onChange={(e) => setHero({ ...hero, title3_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Title Line 3 (GE)</label>
+                  <input type="text" value={hero.title3_ge} onChange={(e) => setHero({ ...hero, title3_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">CTA Button (EN)</label>
-                  <input type="text" value={hero.cta_en} onChange={(e) => setHero({ ...hero, cta_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>CTA Button (EN)</label>
+                  <input type="text" value={hero.cta_en} onChange={(e) => setHero({ ...hero, cta_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">CTA Button (GE)</label>
-                  <input type="text" value={hero.cta_ge} onChange={(e) => setHero({ ...hero, cta_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>CTA Button (GE)</label>
+                  <input type="text" value={hero.cta_ge} onChange={(e) => setHero({ ...hero, cta_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
               </div>
-              <div className="flex justify-end pt-4 border-t border-gray-800">
+              <div className="flex justify-end pt-4 border-t" style={{ borderColor: theme.border }}>
                 <button onClick={saveHero} disabled={saving === 'hero'} className="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
                   {saving === 'hero' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Save Hero
@@ -1239,55 +1278,55 @@ const AdminPanel: React.FC = () => {
             <div className="p-4 bg-[#161616] rounded-lg border border-gray-800 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Location (EN)</label>
-                  <input type="text" value={contacts.location_en} onChange={(e) => setContacts({ ...contacts, location_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Location (EN)</label>
+                  <input type="text" value={contacts.location_en} onChange={(e) => setContacts({ ...contacts, location_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Location (GE)</label>
-                  <input type="text" value={contacts.location_ge} onChange={(e) => setContacts({ ...contacts, location_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Location (GE)</label>
+                  <input type="text" value={contacts.location_ge} onChange={(e) => setContacts({ ...contacts, location_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">City (EN)</label>
-                  <input type="text" value={contacts.city_en} onChange={(e) => setContacts({ ...contacts, city_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>City (EN)</label>
+                  <input type="text" value={contacts.city_en} onChange={(e) => setContacts({ ...contacts, city_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">City (GE)</label>
-                  <input type="text" value={contacts.city_ge} onChange={(e) => setContacts({ ...contacts, city_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>City (GE)</label>
+                  <input type="text" value={contacts.city_ge} onChange={(e) => setContacts({ ...contacts, city_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Hours Weekday (EN)</label>
-                  <input type="text" value={contacts.hours_week_en} onChange={(e) => setContacts({ ...contacts, hours_week_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Hours Weekday (EN)</label>
+                  <input type="text" value={contacts.hours_week_en} onChange={(e) => setContacts({ ...contacts, hours_week_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Hours Weekday (GE)</label>
-                  <input type="text" value={contacts.hours_week_ge} onChange={(e) => setContacts({ ...contacts, hours_week_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Hours Weekday (GE)</label>
+                  <input type="text" value={contacts.hours_week_ge} onChange={(e) => setContacts({ ...contacts, hours_week_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Hours Weekend (EN)</label>
-                  <input type="text" value={contacts.hours_weekend_en} onChange={(e) => setContacts({ ...contacts, hours_weekend_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Hours Weekend (EN)</label>
+                  <input type="text" value={contacts.hours_weekend_en} onChange={(e) => setContacts({ ...contacts, hours_weekend_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Hours Weekend (GE)</label>
-                  <input type="text" value={contacts.hours_weekend_ge} onChange={(e) => setContacts({ ...contacts, hours_weekend_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Hours Weekend (GE)</label>
+                  <input type="text" value={contacts.hours_weekend_ge} onChange={(e) => setContacts({ ...contacts, hours_weekend_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Visit Description (EN)</label>
-                  <textarea value={contacts.visit_desc_en} onChange={(e) => setContacts({ ...contacts, visit_desc_en: e.target.value })} rows={3} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Visit Description (EN)</label>
+                  <textarea value={contacts.visit_desc_en} onChange={(e) => setContacts({ ...contacts, visit_desc_en: e.target.value })} rows={3} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Visit Description (GE)</label>
-                  <textarea value={contacts.visit_desc_ge} onChange={(e) => setContacts({ ...contacts, visit_desc_ge: e.target.value })} rows={3} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Visit Description (GE)</label>
+                  <textarea value={contacts.visit_desc_ge} onChange={(e) => setContacts({ ...contacts, visit_desc_ge: e.target.value })} rows={3} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
               </div>
-              <div className="flex justify-end pt-4 border-t border-gray-800">
+              <div className="flex justify-end pt-4 border-t" style={{ borderColor: theme.border }}>
                 <button onClick={saveContacts} disabled={saving === 'contacts'} className="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
                   {saving === 'contacts' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Save Contacts
@@ -1304,98 +1343,98 @@ const AdminPanel: React.FC = () => {
             <div className="p-4 bg-[#161616] rounded-lg border border-gray-800 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title (EN)</label>
-                  <input type="text" value={brand.title1_en} onChange={(e) => setBrand({ ...brand, title1_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Title (EN)</label>
+                  <input type="text" value={brand.title1_en} onChange={(e) => setBrand({ ...brand, title1_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title (GE)</label>
-                  <input type="text" value={brand.title1_ge} onChange={(e) => setBrand({ ...brand, title1_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title Accent (EN)</label>
-                  <input type="text" value={brand.title_accent_en} onChange={(e) => setBrand({ ...brand, title_accent_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title Accent (GE)</label>
-                  <input type="text" value={brand.title_accent_ge} onChange={(e) => setBrand({ ...brand, title_accent_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Title (GE)</label>
+                  <input type="text" value={brand.title1_ge} onChange={(e) => setBrand({ ...brand, title1_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Description (EN)</label>
-                  <textarea value={brand.desc_en} onChange={(e) => setBrand({ ...brand, desc_en: e.target.value })} rows={3} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Title Accent (EN)</label>
+                  <input type="text" value={brand.title_accent_en} onChange={(e) => setBrand({ ...brand, title_accent_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Description (GE)</label>
-                  <textarea value={brand.desc_ge} onChange={(e) => setBrand({ ...brand, desc_ge: e.target.value })} rows={3} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Title Accent (GE)</label>
+                  <input type="text" value={brand.title_accent_ge} onChange={(e) => setBrand({ ...brand, title_accent_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs uppercase" style={labelStyle}>Description (EN)</label>
+                  <textarea value={brand.desc_en} onChange={(e) => setBrand({ ...brand, desc_en: e.target.value })} rows={3} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs uppercase" style={labelStyle}>Description (GE)</label>
+                  <textarea value={brand.desc_ge} onChange={(e) => setBrand({ ...brand, desc_ge: e.target.value })} rows={3} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
               </div>
 
-              <div className="border-t border-gray-800 pt-4 mt-4">
-                <h4 className="text-sm font-bold text-gray-400 mb-4">Stats</h4>
+              <div className="border-t pt-4 mt-4" style={{ borderColor: theme.border }}>
+                <h4 className="text-sm font-bold mb-4" style={{ color: theme.textMuted }}>Stats</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Stat 1 Value</label>
-                    <input type="text" value={brand.stat1} onChange={(e) => setBrand({ ...brand, stat1: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Stat 1 Value</label>
+                    <input type="text" value={brand.stat1} onChange={(e) => setBrand({ ...brand, stat1: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Stat 1 Label (EN)</label>
-                    <input type="text" value={brand.stat1_label_en} onChange={(e) => setBrand({ ...brand, stat1_label_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Stat 1 Label (EN)</label>
+                    <input type="text" value={brand.stat1_label_en} onChange={(e) => setBrand({ ...brand, stat1_label_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Stat 2 Value</label>
-                    <input type="text" value={brand.stat2} onChange={(e) => setBrand({ ...brand, stat2: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Stat 2 Value</label>
+                    <input type="text" value={brand.stat2} onChange={(e) => setBrand({ ...brand, stat2: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Stat 2 Label (EN)</label>
-                    <input type="text" value={brand.stat2_label_en} onChange={(e) => setBrand({ ...brand, stat2_label_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Stat 2 Label (EN)</label>
+                    <input type="text" value={brand.stat2_label_en} onChange={(e) => setBrand({ ...brand, stat2_label_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                 </div>
               </div>
 
-              <div className="border-t border-gray-800 pt-4 mt-4">
-                <h4 className="text-sm font-bold text-gray-400 mb-4">Features</h4>
+              <div className="border-t pt-4 mt-4" style={{ borderColor: theme.border }}>
+                <h4 className="text-sm font-bold mb-4" style={{ color: theme.textMuted }}>Features</h4>
                 {[1, 2, 3].map((num) => (
                   <div key={num} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div className="space-y-2">
-                      <label className="text-xs text-gray-500 uppercase">Feature {num} Title (EN)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Feature {num} Title (EN)</label>
                       <input
                         type="text"
                         value={(brand as any)[`feature${num}_title_en`]}
                         onChange={(e) => setBrand({ ...brand, [`feature${num}_title_en`]: e.target.value })}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
-                      <label className="text-xs text-gray-500 uppercase">Feature {num} Text (EN)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Feature {num} Text (EN)</label>
                       <input
                         type="text"
                         value={(brand as any)[`feature${num}_text_en`]}
                         onChange={(e) => setBrand({ ...brand, [`feature${num}_text_en`]: e.target.value })}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs text-gray-500 uppercase">Feature {num} Title (GE)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Feature {num} Title (GE)</label>
                       <input
                         type="text"
                         value={(brand as any)[`feature${num}_title_ge`]}
                         onChange={(e) => setBrand({ ...brand, [`feature${num}_title_ge`]: e.target.value })}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
-                      <label className="text-xs text-gray-500 uppercase">Feature {num} Text (GE)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Feature {num} Text (GE)</label>
                       <input
                         type="text"
                         value={(brand as any)[`feature${num}_text_ge`]}
                         onChange={(e) => setBrand({ ...brand, [`feature${num}_text_ge`]: e.target.value })}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="flex justify-end pt-4 border-t border-gray-800">
+              <div className="flex justify-end pt-4 border-t" style={{ borderColor: theme.border }}>
                 <button onClick={saveBrand} disabled={saving === 'brand'} className="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
                   {saving === 'brand' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Save Brand
@@ -1413,125 +1452,125 @@ const AdminPanel: React.FC = () => {
               {/* Title Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Label (EN)</label>
-                  <input type="text" value={game.label_en} onChange={(e) => setGame({ ...game, label_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Label (EN)</label>
+                  <input type="text" value={game.label_en} onChange={(e) => setGame({ ...game, label_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Label (GE)</label>
-                  <input type="text" value={game.label_ge} onChange={(e) => setGame({ ...game, label_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title Line 1 (EN)</label>
-                  <input type="text" value={game.title1_en} onChange={(e) => setGame({ ...game, title1_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title Line 1 (GE)</label>
-                  <input type="text" value={game.title1_ge} onChange={(e) => setGame({ ...game, title1_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Label (GE)</label>
+                  <input type="text" value={game.label_ge} onChange={(e) => setGame({ ...game, label_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title Line 2 (EN)</label>
-                  <input type="text" value={game.title2_en} onChange={(e) => setGame({ ...game, title2_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Title Line 1 (EN)</label>
+                  <input type="text" value={game.title1_en} onChange={(e) => setGame({ ...game, title1_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title Line 2 (GE)</label>
-                  <input type="text" value={game.title2_ge} onChange={(e) => setGame({ ...game, title2_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title Accent (EN)</label>
-                  <input type="text" value={game.title_accent_en} onChange={(e) => setGame({ ...game, title_accent_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title Accent (GE)</label>
-                  <input type="text" value={game.title_accent_ge} onChange={(e) => setGame({ ...game, title_accent_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Title Line 1 (GE)</label>
+                  <input type="text" value={game.title1_ge} onChange={(e) => setGame({ ...game, title1_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Description (EN)</label>
-                  <textarea value={game.desc_en} onChange={(e) => setGame({ ...game, desc_en: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Title Line 2 (EN)</label>
+                  <input type="text" value={game.title2_en} onChange={(e) => setGame({ ...game, title2_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Description (GE)</label>
-                  <textarea value={game.desc_ge} onChange={(e) => setGame({ ...game, desc_ge: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Title Line 2 (GE)</label>
+                  <input type="text" value={game.title2_ge} onChange={(e) => setGame({ ...game, title2_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs uppercase" style={labelStyle}>Title Accent (EN)</label>
+                  <input type="text" value={game.title_accent_en} onChange={(e) => setGame({ ...game, title_accent_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs uppercase" style={labelStyle}>Title Accent (GE)</label>
+                  <input type="text" value={game.title_accent_ge} onChange={(e) => setGame({ ...game, title_accent_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs uppercase" style={labelStyle}>Description (EN)</label>
+                  <textarea value={game.desc_en} onChange={(e) => setGame({ ...game, desc_en: e.target.value })} rows={2} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs uppercase" style={labelStyle}>Description (GE)</label>
+                  <textarea value={game.desc_ge} onChange={(e) => setGame({ ...game, desc_ge: e.target.value })} rows={2} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
               </div>
 
               {/* Unlock Section */}
-              <div className="border-t border-gray-800 pt-4 mt-4">
-                <h4 className="text-sm font-bold text-gray-400 mb-4">Unlock / Access Code</h4>
+              <div className="border-t pt-4 mt-4" style={{ borderColor: theme.border }}>
+                <h4 className="text-sm font-bold mb-4" style={{ color: theme.textMuted }}>Unlock / Access Code</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Enter Code (EN)</label>
-                    <input type="text" value={game.enter_code_en} onChange={(e) => setGame({ ...game, enter_code_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Enter Code (EN)</label>
+                    <input type="text" value={game.enter_code_en} onChange={(e) => setGame({ ...game, enter_code_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Enter Code (GE)</label>
-                    <input type="text" value={game.enter_code_ge} onChange={(e) => setGame({ ...game, enter_code_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Get Code (EN)</label>
-                    <input type="text" value={game.get_code_en} onChange={(e) => setGame({ ...game, get_code_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Get Code (GE)</label>
-                    <input type="text" value={game.get_code_ge} onChange={(e) => setGame({ ...game, get_code_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Enter Code (GE)</label>
+                    <input type="text" value={game.enter_code_ge} onChange={(e) => setGame({ ...game, enter_code_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Locked Desc (EN)</label>
-                    <textarea value={game.locked_desc_en} onChange={(e) => setGame({ ...game, locked_desc_en: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Get Code (EN)</label>
+                    <input type="text" value={game.get_code_en} onChange={(e) => setGame({ ...game, get_code_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Locked Desc (GE)</label>
-                    <textarea value={game.locked_desc_ge} onChange={(e) => setGame({ ...game, locked_desc_ge: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Get Code (GE)</label>
+                    <input type="text" value={game.get_code_ge} onChange={(e) => setGame({ ...game, get_code_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase" style={labelStyle}>Locked Desc (EN)</label>
+                    <textarea value={game.locked_desc_en} onChange={(e) => setGame({ ...game, locked_desc_en: e.target.value })} rows={2} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase" style={labelStyle}>Locked Desc (GE)</label>
+                    <textarea value={game.locked_desc_ge} onChange={(e) => setGame({ ...game, locked_desc_ge: e.target.value })} rows={2} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                 </div>
               </div>
 
               {/* How to Unlock Steps */}
-              <div className="border-t border-gray-800 pt-4 mt-4">
-                <h4 className="text-sm font-bold text-gray-400 mb-4">How to Unlock Steps</h4>
+              <div className="border-t pt-4 mt-4" style={{ borderColor: theme.border }}>
+                <h4 className="text-sm font-bold mb-4" style={{ color: theme.textMuted }}>How to Unlock Steps</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">How to Unlock Title (EN)</label>
-                    <input type="text" value={game.how_to_unlock_en} onChange={(e) => setGame({ ...game, how_to_unlock_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>How to Unlock Title (EN)</label>
+                    <input type="text" value={game.how_to_unlock_en} onChange={(e) => setGame({ ...game, how_to_unlock_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">How to Unlock Title (GE)</label>
-                    <input type="text" value={game.how_to_unlock_ge} onChange={(e) => setGame({ ...game, how_to_unlock_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>How to Unlock Title (GE)</label>
+                    <input type="text" value={game.how_to_unlock_ge} onChange={(e) => setGame({ ...game, how_to_unlock_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                 </div>
                 {[1, 2, 3].map((num) => (
                   <div key={num} className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div className="space-y-2">
-                      <label className="text-xs text-gray-500 uppercase">Step {num} (EN)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Step {num} (EN)</label>
                       <input
                         type="text"
                         value={(game as any)[`step${num}_en`]}
                         onChange={(e) => setGame({ ...game, [`step${num}_en`]: e.target.value })}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs text-gray-500 uppercase">Step {num} (GE)</label>
+                      <label className="text-xs uppercase" style={labelStyle}>Step {num} (GE)</label>
                       <input
                         type="text"
                         value={(game as any)[`step${num}_ge`]}
                         onChange={(e) => setGame({ ...game, [`step${num}_ge`]: e.target.value })}
-                        className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]"
+                        className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle}
                       />
                     </div>
                   </div>
@@ -1539,146 +1578,166 @@ const AdminPanel: React.FC = () => {
               </div>
 
               {/* Code Input */}
-              <div className="border-t border-gray-800 pt-4 mt-4">
-                <h4 className="text-sm font-bold text-gray-400 mb-4">Code Input</h4>
+              <div className="border-t pt-4 mt-4" style={{ borderColor: theme.border }}>
+                <h4 className="text-sm font-bold mb-4" style={{ color: theme.textMuted }}>Code Input</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Have Code (EN)</label>
-                    <input type="text" value={game.have_code_en} onChange={(e) => setGame({ ...game, have_code_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Have Code (EN)</label>
+                    <input type="text" value={game.have_code_en} onChange={(e) => setGame({ ...game, have_code_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Have Code (GE)</label>
-                    <input type="text" value={game.have_code_ge} onChange={(e) => setGame({ ...game, have_code_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Code Placeholder (EN)</label>
-                    <input type="text" value={game.code_placeholder_en} onChange={(e) => setGame({ ...game, code_placeholder_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Code Placeholder (GE)</label>
-                    <input type="text" value={game.code_placeholder_ge} onChange={(e) => setGame({ ...game, code_placeholder_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Have Code (GE)</label>
+                    <input type="text" value={game.have_code_ge} onChange={(e) => setGame({ ...game, have_code_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Unlock Button (EN)</label>
-                    <input type="text" value={game.unlock_btn_en} onChange={(e) => setGame({ ...game, unlock_btn_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Code Placeholder (EN)</label>
+                    <input type="text" value={game.code_placeholder_en} onChange={(e) => setGame({ ...game, code_placeholder_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Unlock Button (GE)</label>
-                    <input type="text" value={game.unlock_btn_ge} onChange={(e) => setGame({ ...game, unlock_btn_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Code Placeholder (GE)</label>
+                    <input type="text" value={game.code_placeholder_ge} onChange={(e) => setGame({ ...game, code_placeholder_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase" style={labelStyle}>Unlock Button (EN)</label>
+                    <input type="text" value={game.unlock_btn_en} onChange={(e) => setGame({ ...game, unlock_btn_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase" style={labelStyle}>Unlock Button (GE)</label>
+                    <input type="text" value={game.unlock_btn_ge} onChange={(e) => setGame({ ...game, unlock_btn_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                 </div>
               </div>
 
               {/* Game Buttons */}
-              <div className="border-t border-gray-800 pt-4 mt-4">
-                <h4 className="text-sm font-bold text-gray-400 mb-4">Game UI</h4>
+              <div className="border-t pt-4 mt-4" style={{ borderColor: theme.border }}>
+                <h4 className="text-sm font-bold mb-4" style={{ color: theme.textMuted }}>Game UI</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Start Button (EN)</label>
-                    <input type="text" value={game.start_en} onChange={(e) => setGame({ ...game, start_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Start Button (EN)</label>
+                    <input type="text" value={game.start_en} onChange={(e) => setGame({ ...game, start_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Start Button (GE)</label>
-                    <input type="text" value={game.start_ge} onChange={(e) => setGame({ ...game, start_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Row (EN)</label>
-                    <input type="text" value={game.row_en} onChange={(e) => setGame({ ...game, row_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Row (GE)</label>
-                    <input type="text" value={game.row_ge} onChange={(e) => setGame({ ...game, row_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Start Button (GE)</label>
+                    <input type="text" value={game.start_ge} onChange={(e) => setGame({ ...game, start_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Retry Button (EN)</label>
-                    <input type="text" value={game.retry_en} onChange={(e) => setGame({ ...game, retry_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Row (EN)</label>
+                    <input type="text" value={game.row_en} onChange={(e) => setGame({ ...game, row_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Retry Button (GE)</label>
-                    <input type="text" value={game.retry_ge} onChange={(e) => setGame({ ...game, retry_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Row (GE)</label>
+                    <input type="text" value={game.row_ge} onChange={(e) => setGame({ ...game, row_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase" style={labelStyle}>Retry Button (EN)</label>
+                    <input type="text" value={game.retry_en} onChange={(e) => setGame({ ...game, retry_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase" style={labelStyle}>Retry Button (GE)</label>
+                    <input type="text" value={game.retry_ge} onChange={(e) => setGame({ ...game, retry_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                 </div>
               </div>
 
               {/* Win/Lose Messages */}
-              <div className="border-t border-gray-800 pt-4 mt-4">
-                <h4 className="text-sm font-bold text-gray-400 mb-4">Win/Lose Messages</h4>
+              <div className="border-t pt-4 mt-4" style={{ borderColor: theme.border }}>
+                <h4 className="text-sm font-bold mb-4" style={{ color: theme.textMuted }}>Win/Lose Messages</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Win Title (EN)</label>
-                    <input type="text" value={game.win_title_en} onChange={(e) => setGame({ ...game, win_title_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Win Title (EN)</label>
+                    <input type="text" value={game.win_title_en} onChange={(e) => setGame({ ...game, win_title_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Win Title (GE)</label>
-                    <input type="text" value={game.win_title_ge} onChange={(e) => setGame({ ...game, win_title_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Win Desc (EN)</label>
-                    <textarea value={game.win_desc_en} onChange={(e) => setGame({ ...game, win_desc_en: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Win Desc (GE)</label>
-                    <textarea value={game.win_desc_ge} onChange={(e) => setGame({ ...game, win_desc_ge: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Win Title (GE)</label>
+                    <input type="text" value={game.win_title_ge} onChange={(e) => setGame({ ...game, win_title_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Lose Title (EN)</label>
-                    <input type="text" value={game.lose_title_en} onChange={(e) => setGame({ ...game, lose_title_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Win Desc (EN)</label>
+                    <textarea value={game.win_desc_en} onChange={(e) => setGame({ ...game, win_desc_en: e.target.value })} rows={2} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Lose Title (GE)</label>
-                    <input type="text" value={game.lose_title_ge} onChange={(e) => setGame({ ...game, lose_title_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Win Desc (GE)</label>
+                    <textarea value={game.win_desc_ge} onChange={(e) => setGame({ ...game, win_desc_ge: e.target.value })} rows={2} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Lose Desc (EN)</label>
-                    <textarea value={game.lose_desc_en} onChange={(e) => setGame({ ...game, lose_desc_en: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Lose Title (EN)</label>
+                    <input type="text" value={game.lose_title_en} onChange={(e) => setGame({ ...game, lose_title_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Lose Desc (GE)</label>
-                    <textarea value={game.lose_desc_ge} onChange={(e) => setGame({ ...game, lose_desc_ge: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Lose Title (GE)</label>
+                    <input type="text" value={game.lose_title_ge} onChange={(e) => setGame({ ...game, lose_title_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase" style={labelStyle}>Lose Desc (EN)</label>
+                    <textarea value={game.lose_desc_en} onChange={(e) => setGame({ ...game, lose_desc_en: e.target.value })} rows={2} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase" style={labelStyle}>Lose Desc (GE)</label>
+                    <textarea value={game.lose_desc_ge} onChange={(e) => setGame({ ...game, lose_desc_ge: e.target.value })} rows={2} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase" style={labelStyle}>Bad Bean Title (EN)</label>
+                    <input type="text" value={game.bad_bean_title_en || ''} onChange={(e) => setGame({ ...game, bad_bean_title_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} placeholder="BAD BEAN." />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase" style={labelStyle}>Bad Bean Title (GE)</label>
+                    <input type="text" value={game.bad_bean_title_ge || ''} onChange={(e) => setGame({ ...game, bad_bean_title_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} placeholder="ცუდი მარცვალი." />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase" style={labelStyle}>Exit Game (EN)</label>
+                    <input type="text" value={game.exit_game_en || ''} onChange={(e) => setGame({ ...game, exit_game_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} placeholder="Exit Game" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase" style={labelStyle}>Exit Game (GE)</label>
+                    <input type="text" value={game.exit_game_ge || ''} onChange={(e) => setGame({ ...game, exit_game_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} placeholder="თამაშიდან გასვლა" />
                   </div>
                 </div>
               </div>
 
               {/* Ticket */}
-              <div className="border-t border-gray-800 pt-4 mt-4">
-                <h4 className="text-sm font-bold text-gray-400 mb-4">Ticket</h4>
+              <div className="border-t pt-4 mt-4" style={{ borderColor: theme.border }}>
+                <h4 className="text-sm font-bold mb-4" style={{ color: theme.textMuted }}>Ticket</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Ticket ID Label (EN)</label>
-                    <input type="text" value={game.ticket_id_en} onChange={(e) => setGame({ ...game, ticket_id_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Ticket ID Label (EN)</label>
+                    <input type="text" value={game.ticket_id_en} onChange={(e) => setGame({ ...game, ticket_id_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Ticket ID Label (GE)</label>
-                    <input type="text" value={game.ticket_id_ge} onChange={(e) => setGame({ ...game, ticket_id_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Ticket ID Label (GE)</label>
+                    <input type="text" value={game.ticket_id_ge} onChange={(e) => setGame({ ...game, ticket_id_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Valid Until (EN)</label>
-                    <input type="text" value={game.valid_until_en} onChange={(e) => setGame({ ...game, valid_until_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Valid Until (EN)</label>
+                    <input type="text" value={game.valid_until_en} onChange={(e) => setGame({ ...game, valid_until_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Valid Until (GE)</label>
-                    <input type="text" value={game.valid_until_ge} onChange={(e) => setGame({ ...game, valid_until_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Valid Until (GE)</label>
+                    <input type="text" value={game.valid_until_ge} onChange={(e) => setGame({ ...game, valid_until_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end pt-4 border-t border-gray-800">
+              <div className="flex justify-end pt-4 border-t" style={{ borderColor: theme.border }}>
                 <button onClick={saveGame} disabled={saving === 'game'} className="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
                   {saving === 'game' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Save Game
@@ -1696,101 +1755,101 @@ const AdminPanel: React.FC = () => {
               {/* Title Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Label (EN)</label>
-                  <input type="text" value={oracle.label_en} onChange={(e) => setOracle({ ...oracle, label_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Label (EN)</label>
+                  <input type="text" value={oracle.label_en} onChange={(e) => setOracle({ ...oracle, label_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Label (GE)</label>
-                  <input type="text" value={oracle.label_ge} onChange={(e) => setOracle({ ...oracle, label_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title Line 1 (EN)</label>
-                  <input type="text" value={oracle.title1_en} onChange={(e) => setOracle({ ...oracle, title1_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title Line 1 (GE)</label>
-                  <input type="text" value={oracle.title1_ge} onChange={(e) => setOracle({ ...oracle, title1_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Label (GE)</label>
+                  <input type="text" value={oracle.label_ge} onChange={(e) => setOracle({ ...oracle, label_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title Accent (EN)</label>
-                  <input type="text" value={oracle.title_accent_en} onChange={(e) => setOracle({ ...oracle, title_accent_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Title Line 1 (EN)</label>
+                  <input type="text" value={oracle.title1_en} onChange={(e) => setOracle({ ...oracle, title1_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Title Accent (GE)</label>
-                  <input type="text" value={oracle.title_accent_ge} onChange={(e) => setOracle({ ...oracle, title_accent_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Title Line 1 (GE)</label>
+                  <input type="text" value={oracle.title1_ge} onChange={(e) => setOracle({ ...oracle, title1_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Description (EN)</label>
-                  <textarea value={oracle.desc_en} onChange={(e) => setOracle({ ...oracle, desc_en: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Title Accent (EN)</label>
+                  <input type="text" value={oracle.title_accent_en} onChange={(e) => setOracle({ ...oracle, title_accent_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-gray-500 uppercase">Description (GE)</label>
-                  <textarea value={oracle.desc_ge} onChange={(e) => setOracle({ ...oracle, desc_ge: e.target.value })} rows={2} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                  <label className="text-xs uppercase" style={labelStyle}>Title Accent (GE)</label>
+                  <input type="text" value={oracle.title_accent_ge} onChange={(e) => setOracle({ ...oracle, title_accent_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs uppercase" style={labelStyle}>Description (EN)</label>
+                  <textarea value={oracle.desc_en} onChange={(e) => setOracle({ ...oracle, desc_en: e.target.value })} rows={2} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs uppercase" style={labelStyle}>Description (GE)</label>
+                  <textarea value={oracle.desc_ge} onChange={(e) => setOracle({ ...oracle, desc_ge: e.target.value })} rows={2} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                 </div>
               </div>
 
               {/* Buttons */}
-              <div className="border-t border-gray-800 pt-4 mt-4">
-                <h4 className="text-sm font-bold text-gray-400 mb-4">Buttons</h4>
+              <div className="border-t pt-4 mt-4" style={{ borderColor: theme.border }}>
+                <h4 className="text-sm font-bold mb-4" style={{ color: theme.textMuted }}>Buttons</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Sip Button (EN)</label>
-                    <input type="text" value={oracle.btn_sip_en} onChange={(e) => setOracle({ ...oracle, btn_sip_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Sip Button (EN)</label>
+                    <input type="text" value={oracle.btn_sip_en} onChange={(e) => setOracle({ ...oracle, btn_sip_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Sip Button (GE)</label>
-                    <input type="text" value={oracle.btn_sip_ge} onChange={(e) => setOracle({ ...oracle, btn_sip_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Reading Button (EN)</label>
-                    <input type="text" value={oracle.btn_reading_en} onChange={(e) => setOracle({ ...oracle, btn_reading_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Reading Button (GE)</label>
-                    <input type="text" value={oracle.btn_reading_ge} onChange={(e) => setOracle({ ...oracle, btn_reading_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Sip Button (GE)</label>
+                    <input type="text" value={oracle.btn_sip_ge} onChange={(e) => setOracle({ ...oracle, btn_sip_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Retry Button (EN)</label>
-                    <input type="text" value={oracle.btn_retry_en} onChange={(e) => setOracle({ ...oracle, btn_retry_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Reading Button (EN)</label>
+                    <input type="text" value={oracle.btn_reading_en} onChange={(e) => setOracle({ ...oracle, btn_reading_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Retry Button (GE)</label>
-                    <input type="text" value={oracle.btn_retry_ge} onChange={(e) => setOracle({ ...oracle, btn_retry_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Reading Button (GE)</label>
+                    <input type="text" value={oracle.btn_reading_ge} onChange={(e) => setOracle({ ...oracle, btn_reading_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase" style={labelStyle}>Retry Button (EN)</label>
+                    <input type="text" value={oracle.btn_retry_en} onChange={(e) => setOracle({ ...oracle, btn_retry_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase" style={labelStyle}>Retry Button (GE)</label>
+                    <input type="text" value={oracle.btn_retry_ge} onChange={(e) => setOracle({ ...oracle, btn_retry_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                 </div>
               </div>
 
               {/* Instruction */}
-              <div className="border-t border-gray-800 pt-4 mt-4">
-                <h4 className="text-sm font-bold text-gray-400 mb-4">Instruction</h4>
+              <div className="border-t pt-4 mt-4" style={{ borderColor: theme.border }}>
+                <h4 className="text-sm font-bold mb-4" style={{ color: theme.textMuted }}>Instruction</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Instruction (EN)</label>
-                    <input type="text" value={oracle.instruction_en} onChange={(e) => setOracle({ ...oracle, instruction_en: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Instruction (EN)</label>
+                    <input type="text" value={oracle.instruction_en} onChange={(e) => setOracle({ ...oracle, instruction_en: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase">Instruction (GE)</label>
-                    <input type="text" value={oracle.instruction_ge} onChange={(e) => setOracle({ ...oracle, instruction_ge: e.target.value })} className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 rounded text-white focus:outline-none focus:border-[#FF3B30]" />
+                    <label className="text-xs uppercase" style={labelStyle}>Instruction (GE)</label>
+                    <input type="text" value={oracle.instruction_ge} onChange={(e) => setOracle({ ...oracle, instruction_ge: e.target.value })} className="w-full px-3 py-2 rounded focus:outline-none focus:border-[#FF3B30]" style={inputStyle} />
                   </div>
                 </div>
               </div>
 
               {/* Predictions */}
-              <div className="border-t border-gray-800 pt-4 mt-4">
-                <h4 className="text-sm font-bold text-gray-400 mb-4">Predictions (EN)</h4>
+              <div className="border-t pt-4 mt-4" style={{ borderColor: theme.border }}>
+                <h4 className="text-sm font-bold mb-4" style={{ color: theme.textMuted }}>Predictions (EN)</h4>
                 <div className="space-y-2">
                   {oracle.predictions_en.map((prediction, index) => (
                     <div key={index} className="flex gap-2">
@@ -1832,8 +1891,8 @@ const AdminPanel: React.FC = () => {
                 </div>
               </div>
 
-              <div className="border-t border-gray-800 pt-4 mt-4">
-                <h4 className="text-sm font-bold text-gray-400 mb-4">Predictions (GE)</h4>
+              <div className="border-t pt-4 mt-4" style={{ borderColor: theme.border }}>
+                <h4 className="text-sm font-bold mb-4" style={{ color: theme.textMuted }}>Predictions (GE)</h4>
                 <div className="space-y-2">
                   {oracle.predictions_ge.map((prediction, index) => (
                     <div key={index} className="flex gap-2">
@@ -1853,7 +1912,7 @@ const AdminPanel: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end pt-4 border-t border-gray-800">
+              <div className="flex justify-end pt-4 border-t" style={{ borderColor: theme.border }}>
                 <button onClick={saveOracle} disabled={saving === 'oracle'} className="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
                   {saving === 'oracle' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Save Oracle
