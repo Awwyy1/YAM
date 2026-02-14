@@ -1,8 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 
 type Lang = 'en' | 'ge';
+
+// Module-level cache: once an external image is loaded, skip preloading on re-navigation
+const loadedImageCache = new Set<string>();
+
+function isLocalImage(url: string): boolean {
+  return url.startsWith('/images/');
+}
+
+/** Preload a single image, resolve when ready (or on error). */
+function preloadImage(url: string): Promise<void> {
+  if (loadedImageCache.has(url)) return Promise.resolve();
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => { loadedImageCache.add(url); resolve(); };
+    img.onerror = () => { loadedImageCache.add(url); resolve(); };
+    img.src = url;
+  });
+}
 
 // Featured Drinks (Homepage)
 interface DrinkItem {
@@ -77,14 +95,16 @@ const FALLBACK_SHOP: Record<Lang, ShopItem[]> = {
   ]
 };
 
-// Hook to get featured drinks data with real-time updates
+// Hook to get featured drinks data with real-time updates.
+// Text updates immediately from Firebase; external images are preloaded
+// in background so the user sees local fallbacks until they're ready.
 export function useDrinksData(lang: Lang) {
   const [drinks, setDrinks] = useState<DrinkItem[]>(FALLBACK_DRINKS[lang]);
   const [isLoading, setIsLoading] = useState(true);
   const [source, setSource] = useState<'firebase' | 'fallback'>('firebase');
+  const preloadGenRef = useRef(0);
 
   useEffect(() => {
-    // Real-time listener for drinks collection
     const unsubscribe = onSnapshot(
       collection(db, 'drinks'),
       (snapshot) => {
@@ -94,16 +114,41 @@ export function useDrinksData(lang: Lang) {
         });
 
         if (items.length > 0) {
-          const converted = items
-            .sort((a, b) => a.order - b.order)
-            .map((item, index) => ({
-              id: index + 1,
-              name: lang === 'en' ? item.name_en : item.name_ge,
-              note: lang === 'en' ? item.note_en : item.note_ge,
-              img: item.img,
-            }));
-          setDrinks(converted);
-          setSource('firebase');
+          const sorted = items.sort((a, b) => a.order - b.order);
+          const fallback = FALLBACK_DRINKS[lang];
+
+          const converted = sorted.map((item, index) => ({
+            id: index + 1,
+            name: lang === 'en' ? item.name_en : item.name_ge,
+            note: lang === 'en' ? item.note_en : item.note_ge,
+            img: item.img,
+          }));
+
+          // Find external images that need preloading
+          const externalUrls = converted
+            .map(d => d.img)
+            .filter(url => !isLocalImage(url) && !loadedImageCache.has(url));
+
+          if (externalUrls.length > 0) {
+            // Show text immediately with local fallback images
+            setDrinks(converted.map((d, idx) => ({
+              ...d,
+              img: isLocalImage(d.img) ? d.img : (fallback[idx]?.img || d.img),
+            })));
+            setSource('firebase');
+
+            // Preload external images, then swap
+            const gen = ++preloadGenRef.current;
+            Promise.all(externalUrls.map(preloadImage)).then(() => {
+              if (gen === preloadGenRef.current) {
+                setDrinks(converted);
+              }
+            });
+          } else {
+            // All images already cached or local — show immediately
+            setDrinks(converted);
+            setSource('firebase');
+          }
         } else {
           setDrinks(FALLBACK_DRINKS[lang]);
           setSource('fallback');
@@ -124,14 +169,16 @@ export function useDrinksData(lang: Lang) {
   return { drinks, isLoading, source };
 }
 
-// Hook to get shop data with real-time updates
+// Hook to get shop data with real-time updates.
+// Same preloading strategy as drinks: text updates instantly,
+// external images swap in only after they're cached by the browser.
 export function useShopData(lang: Lang) {
   const [items, setItems] = useState<ShopItem[]>(FALLBACK_SHOP[lang]);
   const [isLoading, setIsLoading] = useState(true);
   const [source, setSource] = useState<'firebase' | 'fallback'>('firebase');
+  const preloadGenRef = useRef(0);
 
   useEffect(() => {
-    // Real-time listener for shop collection
     const unsubscribe = onSnapshot(
       collection(db, 'shop'),
       (snapshot) => {
@@ -141,19 +188,41 @@ export function useShopData(lang: Lang) {
         });
 
         if (shopItems.length > 0) {
-          const converted = shopItems
-            .sort((a, b) => a.order - b.order)
-            .map((item, index) => ({
-              id: 100 + index + 1,
-              name: lang === 'en' ? item.name_en : item.name_ge,
-              color: lang === 'en' ? item.color_en : item.color_ge,
-              price: item.price,
-              img: item.img,
-              desc: lang === 'en' ? item.desc_en : item.desc_ge,
-              comingSoon: item.comingSoon,
-            }));
-          setItems(converted);
-          setSource('firebase');
+          const sorted = shopItems.sort((a, b) => a.order - b.order);
+          const fallback = FALLBACK_SHOP[lang];
+
+          const converted = sorted.map((item, index) => ({
+            id: 100 + index + 1,
+            name: lang === 'en' ? item.name_en : item.name_ge,
+            color: lang === 'en' ? item.color_en : item.color_ge,
+            price: item.price,
+            img: item.img,
+            desc: lang === 'en' ? item.desc_en : item.desc_ge,
+            comingSoon: item.comingSoon,
+          }));
+
+          const externalUrls = converted
+            .map(d => d.img)
+            .filter(url => !isLocalImage(url) && !loadedImageCache.has(url));
+
+          if (externalUrls.length > 0) {
+            // Show text immediately with local fallback images
+            setItems(converted.map((d, idx) => ({
+              ...d,
+              img: isLocalImage(d.img) ? d.img : (fallback[idx]?.img || d.img),
+            })));
+            setSource('firebase');
+
+            const gen = ++preloadGenRef.current;
+            Promise.all(externalUrls.map(preloadImage)).then(() => {
+              if (gen === preloadGenRef.current) {
+                setItems(converted);
+              }
+            });
+          } else {
+            setItems(converted);
+            setSource('firebase');
+          }
         } else {
           setItems(FALLBACK_SHOP[lang]);
           setSource('fallback');
