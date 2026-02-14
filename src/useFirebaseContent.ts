@@ -528,7 +528,7 @@ export function useBrandContent(lang: Lang) {
             title1: lang === 'en' ? data.title1_en : data.title1_ge,
             titleAccent: lang === 'en' ? data.title_accent_en : data.title_accent_ge,
             desc: lang === 'en' ? data.desc_en : data.desc_ge,
-            imageUrl: data.image_url || '',
+            imageUrl: '',
             stat1: data.stat1,
             stat1Label: lang === 'en' ? data.stat1_label_en : data.stat1_label_ge,
             stat2: data.stat2,

@@ -1,26 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 
 type Lang = 'en' | 'ge';
-
-// Module-level cache: once an external image is loaded, skip preloading on re-navigation
-const loadedImageCache = new Set<string>();
-
-function isLocalImage(url: string): boolean {
-  return url.startsWith('/images/');
-}
-
-/** Preload a single image, resolve when ready (or on error). */
-function preloadImage(url: string): Promise<void> {
-  if (loadedImageCache.has(url)) return Promise.resolve();
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => { loadedImageCache.add(url); resolve(); };
-    img.onerror = () => { loadedImageCache.add(url); resolve(); };
-    img.src = url;
-  });
-}
 
 // Featured Drinks (Homepage)
 interface DrinkItem {
@@ -40,7 +22,7 @@ interface FirebaseDrink {
   order: number;
 }
 
-// Fallback featured drinks — local images for instant display
+// Local images served by Vercel CDN — instant loading
 const FALLBACK_DRINKS: Record<Lang, DrinkItem[]> = {
   en: [
     { id: 1, name: 'YAM SPECIAL', note: 'Honey-infused cold brew & sea salt.', img: '/images/drinks/drink-1.jpg' },
@@ -79,7 +61,7 @@ interface FirebaseShopItem {
   order: number;
 }
 
-// Fallback shop items — local images for instant display
+// Local images served by Vercel CDN — instant loading
 const FALLBACK_SHOP: Record<Lang, ShopItem[]> = {
   en: [
     { id: 101, name: "YAM ARCHIVE TEE", color: "BLAZE ORANGE", price: "₾45.00", img: "/images/shop/shop-101.jpg", desc: "Heavyweight cotton with puff print logo.", comingSoon: true },
@@ -96,13 +78,11 @@ const FALLBACK_SHOP: Record<Lang, ShopItem[]> = {
 };
 
 // Hook to get featured drinks data with real-time updates.
-// Text updates immediately from Firebase; external images are preloaded
-// in background so the user sees local fallbacks until they're ready.
+// Firebase provides text (names, notes); images always served locally via Vercel CDN.
 export function useDrinksData(lang: Lang) {
   const [drinks, setDrinks] = useState<DrinkItem[]>(FALLBACK_DRINKS[lang]);
   const [isLoading, setIsLoading] = useState(true);
   const [source, setSource] = useState<'firebase' | 'fallback'>('firebase');
-  const preloadGenRef = useRef(0);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
@@ -114,41 +94,17 @@ export function useDrinksData(lang: Lang) {
         });
 
         if (items.length > 0) {
-          const sorted = items.sort((a, b) => a.order - b.order);
           const fallback = FALLBACK_DRINKS[lang];
-
-          const converted = sorted.map((item, index) => ({
-            id: index + 1,
-            name: lang === 'en' ? item.name_en : item.name_ge,
-            note: lang === 'en' ? item.note_en : item.note_ge,
-            img: item.img,
-          }));
-
-          // Find external images that need preloading
-          const externalUrls = converted
-            .map(d => d.img)
-            .filter(url => !isLocalImage(url) && !loadedImageCache.has(url));
-
-          if (externalUrls.length > 0) {
-            // Show text immediately with local fallback images
-            setDrinks(converted.map((d, idx) => ({
-              ...d,
-              img: isLocalImage(d.img) ? d.img : (fallback[idx]?.img || d.img),
-            })));
-            setSource('firebase');
-
-            // Preload external images, then swap
-            const gen = ++preloadGenRef.current;
-            Promise.all(externalUrls.map(preloadImage)).then(() => {
-              if (gen === preloadGenRef.current) {
-                setDrinks(converted);
-              }
-            });
-          } else {
-            // All images already cached or local — show immediately
-            setDrinks(converted);
-            setSource('firebase');
-          }
+          const converted = items
+            .sort((a, b) => a.order - b.order)
+            .map((item, index) => ({
+              id: index + 1,
+              name: lang === 'en' ? item.name_en : item.name_ge,
+              note: lang === 'en' ? item.note_en : item.note_ge,
+              img: fallback[index]?.img || `/images/drinks/drink-${index + 1}.jpg`,
+            }));
+          setDrinks(converted);
+          setSource('firebase');
         } else {
           setDrinks(FALLBACK_DRINKS[lang]);
           setSource('fallback');
@@ -170,13 +126,11 @@ export function useDrinksData(lang: Lang) {
 }
 
 // Hook to get shop data with real-time updates.
-// Same preloading strategy as drinks: text updates instantly,
-// external images swap in only after they're cached by the browser.
+// Firebase provides text (names, prices, etc.); images always served locally via Vercel CDN.
 export function useShopData(lang: Lang) {
   const [items, setItems] = useState<ShopItem[]>(FALLBACK_SHOP[lang]);
   const [isLoading, setIsLoading] = useState(true);
   const [source, setSource] = useState<'firebase' | 'fallback'>('firebase');
-  const preloadGenRef = useRef(0);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
@@ -188,41 +142,20 @@ export function useShopData(lang: Lang) {
         });
 
         if (shopItems.length > 0) {
-          const sorted = shopItems.sort((a, b) => a.order - b.order);
           const fallback = FALLBACK_SHOP[lang];
-
-          const converted = sorted.map((item, index) => ({
-            id: 100 + index + 1,
-            name: lang === 'en' ? item.name_en : item.name_ge,
-            color: lang === 'en' ? item.color_en : item.color_ge,
-            price: item.price,
-            img: item.img,
-            desc: lang === 'en' ? item.desc_en : item.desc_ge,
-            comingSoon: item.comingSoon,
-          }));
-
-          const externalUrls = converted
-            .map(d => d.img)
-            .filter(url => !isLocalImage(url) && !loadedImageCache.has(url));
-
-          if (externalUrls.length > 0) {
-            // Show text immediately with local fallback images
-            setItems(converted.map((d, idx) => ({
-              ...d,
-              img: isLocalImage(d.img) ? d.img : (fallback[idx]?.img || d.img),
-            })));
-            setSource('firebase');
-
-            const gen = ++preloadGenRef.current;
-            Promise.all(externalUrls.map(preloadImage)).then(() => {
-              if (gen === preloadGenRef.current) {
-                setItems(converted);
-              }
-            });
-          } else {
-            setItems(converted);
-            setSource('firebase');
-          }
+          const converted = shopItems
+            .sort((a, b) => a.order - b.order)
+            .map((item, index) => ({
+              id: 100 + index + 1,
+              name: lang === 'en' ? item.name_en : item.name_ge,
+              color: lang === 'en' ? item.color_en : item.color_ge,
+              price: item.price,
+              img: fallback[index]?.img || `/images/shop/shop-${100 + index + 1}.jpg`,
+              desc: lang === 'en' ? item.desc_en : item.desc_ge,
+              comingSoon: item.comingSoon,
+            }));
+          setItems(converted);
+          setSource('firebase');
         } else {
           setItems(FALLBACK_SHOP[lang]);
           setSource('fallback');
