@@ -193,29 +193,29 @@ const FALLBACK_EXTRA: Record<Lang, MenuItemSimple[]> = {
 
 const FALLBACK_DRINKS: Record<Lang, DrinkItemSimple[]> = {
   en: [
-    { id: 1, name: 'YAM SPECIAL', note: 'Honey-infused cold brew & sea salt.', img: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&q=80' },
-    { id: 2, name: 'SILKY FLAT WHITE', note: 'Micro-foam over double ristretto.', img: 'https://images.unsplash.com/photo-1534778101976-62847782c213?w=800&q=80' },
-    { id: 3, name: 'BATCH BREW', note: 'Ethiopia, floral & light body.', img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80' },
+    { id: 1, name: 'YAM SPECIAL', note: 'Honey-infused cold brew & sea salt.', img: '/images/drinks/drink-1.jpg' },
+    { id: 2, name: 'SILKY FLAT WHITE', note: 'Micro-foam over double ristretto.', img: '/images/drinks/drink-2.jpg' },
+    { id: 3, name: 'BATCH BREW', note: 'Ethiopia, floral & light body.', img: '/images/drinks/drink-3.jpg' },
   ],
   ge: [
-    { id: 1, name: 'YAM სპეშალი', note: 'თაფლიანი ქოლდ ბრიუ და ზღვის მარილი.', img: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&q=80' },
-    { id: 2, name: 'სილქი ფლეთ უაითი', note: 'მიკრო-ქაფი ორმაგ რისტრეტოზე.', img: 'https://images.unsplash.com/photo-1534778101976-62847782c213?w=800&q=80' },
-    { id: 3, name: 'ბეჩ ბრიუ', note: 'ეთიოპია, ყვავილოვანი და მსუბუქი.', img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80' },
+    { id: 1, name: 'YAM სპეშალი', note: 'თაფლიანი ქოლდ ბრიუ და ზღვის მარილი.', img: '/images/drinks/drink-1.jpg' },
+    { id: 2, name: 'სილქი ფლეთ უაითი', note: 'მიკრო-ქაფი ორმაგ რისტრეტოზე.', img: '/images/drinks/drink-2.jpg' },
+    { id: 3, name: 'ბეჩ ბრიუ', note: 'ეთიოპია, ყვავილოვანი და მსუბუქი.', img: '/images/drinks/drink-3.jpg' },
   ]
 };
 
 const FALLBACK_SHOP: Record<Lang, ShopItemSimple[]> = {
   en: [
-    { id: 101, name: 'YAM ARCHIVE TEE', color: 'BLAZE ORANGE', price: '₾45.00', img: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80', desc: 'Heavyweight cotton with puff print logo.', comingSoon: true },
-    { id: 102, name: 'ABSTRACT NOIR', color: 'MIDNIGHT BLACK', price: '₾50.00', img: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&q=80', desc: 'Oversized fit. Back abstract tonal print.', comingSoon: true },
-    { id: 103, name: 'YAM HOODIE', color: 'VOID', price: '₾85.00', img: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80', comingSoon: true },
-    { id: 104, name: 'CANVAS TOTE', color: 'RAW', price: '₾25.00', img: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&q=80', comingSoon: true },
+    { id: 101, name: 'YAM ARCHIVE TEE', color: 'BLAZE ORANGE', price: '₾45.00', img: '/images/shop/shop-101.jpg', desc: 'Heavyweight cotton with puff print logo.', comingSoon: true },
+    { id: 102, name: 'ABSTRACT NOIR', color: 'MIDNIGHT BLACK', price: '₾50.00', img: '/images/shop/shop-102.jpg', desc: 'Oversized fit. Back abstract tonal print.', comingSoon: true },
+    { id: 103, name: 'YAM HOODIE', color: 'VOID', price: '₾85.00', img: '/images/shop/shop-103.jpg', comingSoon: true },
+    { id: 104, name: 'CANVAS TOTE', color: 'RAW', price: '₾25.00', img: '/images/shop/shop-104.jpg', comingSoon: true },
   ],
   ge: [
-    { id: 101, name: 'YAM არქივ TEE', color: 'მკვეთრი ნარინჯისფერი', price: '₾45.00', img: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80', desc: 'მძიმე ბამბა, მოცულობითი ლოგო.', comingSoon: true },
-    { id: 102, name: 'აბსტრაქტ ნუარი', color: 'შუაღამის შავი', price: '₾50.00', img: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&q=80', desc: 'ოვერსაიზ სტილი. აბსტრაქტული პრინტი ზურგზე.', comingSoon: true },
-    { id: 103, name: 'YAM ჰუდი', color: 'VOID', price: '₾85.00', img: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80', comingSoon: true },
-    { id: 104, name: 'ტილოს ჩანთა', color: 'RAW', price: '₾25.00', img: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&q=80', comingSoon: true },
+    { id: 101, name: 'YAM არქივ TEE', color: 'მკვეთრი ნარინჯისფერი', price: '₾45.00', img: '/images/shop/shop-101.jpg', desc: 'მძიმე ბამბა, მოცულობითი ლოგო.', comingSoon: true },
+    { id: 102, name: 'აბსტრაქტ ნუარი', color: 'შუაღამის შავი', price: '₾50.00', img: '/images/shop/shop-102.jpg', desc: 'ოვერსაიზ სტილი. აბსტრაქტული პრინტი ზურგზე.', comingSoon: true },
+    { id: 103, name: 'YAM ჰუდი', color: 'VOID', price: '₾85.00', img: '/images/shop/shop-103.jpg', comingSoon: true },
+    { id: 104, name: 'ტილოს ჩანთა', color: 'RAW', price: '₾25.00', img: '/images/shop/shop-104.jpg', comingSoon: true },
   ]
 };
 

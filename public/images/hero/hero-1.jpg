@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="800" viewBox="0 0 1400 800">
+  <rect fill="#1a1a1a" width="1400" height="800"/>
+  <text x="50%" y="45%" font-family="system-ui, sans-serif" font-size="48" font-weight="900" fill="#FF3B30" text-anchor="middle">HERO IMAGE</text>
+  <text x="50%" y="55%" font-family="system-ui, sans-serif" font-size="24" fill="#666" text-anchor="middle">hero-1.jpg (1400x800)</text>
+</svg>
