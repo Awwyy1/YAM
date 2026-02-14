@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
+  <rect fill="#2a2a2a" width="800" height="1000"/>
+  <text x="50%" y="45%" font-family="system-ui, sans-serif" font-size="32" font-weight="900" fill="#FF3B30" text-anchor="middle">TEAM 3</text>
+  <text x="50%" y="55%" font-family="system-ui, sans-serif" font-size="18" fill="#666" text-anchor="middle">team-3.jpg (4:5)</text>
+</svg>
