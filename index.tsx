@@ -620,7 +620,17 @@ const BrandPage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) 
   const stat2 = brandContent.stat2 || t.stat2;
   const stat2Label = brandContent.stat2Label || t.stat2_label;
   const features = brandContent.features.length > 0 ? brandContent.features : t.features;
-  const imageUrl = brandContent.imageUrl || "https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=1200&q=80";
+  const targetImageUrl = brandContent.imageUrl || "https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=1200&q=80";
+
+  // Preload image: only switch to new URL after it's fully loaded
+  const [loadedImageUrl, setLoadedImageUrl] = useState(targetImageUrl);
+
+  useEffect(() => {
+    if (targetImageUrl === loadedImageUrl) return;
+    const img = new Image();
+    img.onload = () => setLoadedImageUrl(targetImageUrl);
+    img.src = targetImageUrl;
+  }, [targetImageUrl, loadedImageUrl]);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-40 pb-20 px-6 md:px-12 max-w-7xl mx-auto">
@@ -635,7 +645,7 @@ const BrandPage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) 
           </div>
         </motion.div>
         <div className="rounded-[40px] overflow-hidden aspect-[4/5] shadow-xl">
-          <img src={imageUrl} className="w-full h-full object-cover" alt="Brand" />
+          <img src={loadedImageUrl} className="w-full h-full object-cover" alt="Brand" />
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
