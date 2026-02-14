@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
-import { isLocalImage, preloadImages } from './imageUtils';
 
 type Lang = 'en' | 'ge';
 
@@ -354,8 +353,8 @@ export function useMenuData(lang: Lang) {
 }
 
 // Drinks hook (featured drinks with photos) with real-time updates
-// Initializes with local fallback images for instant display, then swaps
-// to Firebase data after external images are preloaded.
+// Initializes with local fallback images for instant display.
+// Firebase data updates text immediately; images swap as browser loads them.
 export function useDrinksData(lang: Lang) {
   const [drinks, setDrinks] = useState<DrinkItemSimple[]>(FALLBACK_DRINKS[lang]);
   const [isLoading, setIsLoading] = useState(true);
@@ -368,20 +367,12 @@ export function useDrinksData(lang: Lang) {
         snapshot.forEach(d => items.push(d.data() as FirebaseDrinkItem));
 
         if (items.length > 0) {
-          const newDrinks = items.sort((a, b) => a.order - b.order).map((i, idx) => ({
+          setDrinks(items.sort((a, b) => a.order - b.order).map((i, idx) => ({
             id: idx + 1,
             name: lang === 'en' ? i.name_en : i.name_ge,
             note: lang === 'en' ? i.note_en : i.note_ge,
             img: i.img,
-          }));
-
-          // Preload external images before updating state to avoid flash
-          const externalUrls = newDrinks.filter(d => !isLocalImage(d.img)).map(d => d.img);
-          if (externalUrls.length > 0) {
-            preloadImages(externalUrls).then(() => setDrinks(newDrinks));
-          } else {
-            setDrinks(newDrinks);
-          }
+          })));
         }
         setIsLoading(false);
       },
@@ -398,8 +389,8 @@ export function useDrinksData(lang: Lang) {
 }
 
 // Shop hook with real-time updates
-// Initializes with local fallback images for instant display, then swaps
-// to Firebase data after external images are preloaded.
+// Initializes with local fallback images for instant display.
+// Firebase data updates text immediately; images swap as browser loads them.
 export function useShopData(lang: Lang) {
   const [items, setItems] = useState<ShopItemSimple[]>(FALLBACK_SHOP[lang]);
   const [isLoading, setIsLoading] = useState(true);
@@ -412,7 +403,7 @@ export function useShopData(lang: Lang) {
         snapshot.forEach(d => shopItems.push(d.data() as FirebaseShopItem));
 
         if (shopItems.length > 0) {
-          const newItems = shopItems.sort((a, b) => a.order - b.order).map((i, idx) => ({
+          setItems(shopItems.sort((a, b) => a.order - b.order).map((i, idx) => ({
             id: 100 + idx + 1,
             name: lang === 'en' ? i.name_en : i.name_ge,
             color: lang === 'en' ? i.color_en : i.color_ge,
@@ -420,15 +411,7 @@ export function useShopData(lang: Lang) {
             img: i.img,
             desc: lang === 'en' ? i.desc_en : i.desc_ge,
             comingSoon: i.comingSoon,
-          }));
-
-          // Preload external images before updating state to avoid flash
-          const externalUrls = newItems.filter(d => !isLocalImage(d.img)).map(d => d.img);
-          if (externalUrls.length > 0) {
-            preloadImages(externalUrls).then(() => setItems(newItems));
-          } else {
-            setItems(newItems);
-          }
+          })));
         }
         setIsLoading(false);
       },
