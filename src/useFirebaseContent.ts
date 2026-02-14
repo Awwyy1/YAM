@@ -507,7 +507,7 @@ export function useBrandContent(lang: Lang) {
     title1: lang === 'en' ? FALLBACK_BRAND.title1_en : FALLBACK_BRAND.title1_ge,
     titleAccent: lang === 'en' ? FALLBACK_BRAND.title_accent_en : FALLBACK_BRAND.title_accent_ge,
     desc: lang === 'en' ? FALLBACK_BRAND.desc_en : FALLBACK_BRAND.desc_ge,
-    imageUrl: '',
+    imageUrl: FALLBACK_BRAND.image_url || '',
     stat1: FALLBACK_BRAND.stat1,
     stat1Label: lang === 'en' ? FALLBACK_BRAND.stat1_label_en : FALLBACK_BRAND.stat1_label_ge,
     stat2: FALLBACK_BRAND.stat2,
