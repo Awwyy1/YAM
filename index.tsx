@@ -7,6 +7,7 @@ import AdminPanel from './src/Admin';
 import { useMenuData } from './src/useFirebaseMenu';
 import { useDrinksData, useShopData, useMarqueeData } from './src/useFirebaseData';
 import { useBrandContent } from './src/useFirebaseContent';
+import { isLocalImage } from './src/imageUtils';
 
 // GTM DataLayer integration
 declare global {
@@ -622,11 +623,16 @@ const BrandPage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) 
   const features = brandContent.features.length > 0 ? brandContent.features : t.features;
   const targetImageUrl = brandContent.imageUrl || "/images/brand/brand-1.jpg";
 
-  // Preload image: only switch to new URL after it's fully loaded
+  // Local images (/images/...) are shown instantly without preloading.
+  // External URLs (Firebase) are preloaded to avoid a visual flash.
   const [loadedImageUrl, setLoadedImageUrl] = useState(targetImageUrl);
 
   useEffect(() => {
     if (targetImageUrl === loadedImageUrl) return;
+    if (isLocalImage(targetImageUrl)) {
+      setLoadedImageUrl(targetImageUrl);
+      return;
+    }
     const img = new Image();
     img.onload = () => setLoadedImageUrl(targetImageUrl);
     img.src = targetImageUrl;
