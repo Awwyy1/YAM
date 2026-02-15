@@ -106,7 +106,7 @@ const CONTENT = {
             manifesto_label: "",
             title_1: "HEY, IT'S",
             title_accent: "YAM.",
-            desc: "We opened in 2026 because we wanted a spot to hang out ourselves. Turns out, other people wanted that too. Now we make coffee and try not to overthink it.",
+            desc: "We decided to try and create one more spot where we’d love to hang out ourselves. Turns out, other people wanted that too. Now we make coffee and try not to overthink it.",
             stat1: "2026",
             stat1_label: "BORN",
             stat2: "BATUMI",
