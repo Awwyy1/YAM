@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, X, Instagram, Sun, Moon, Leaf, Coffee, Globe, ArrowUpRight, MapPin, Clock, Trash2, Gamepad2, Share2, Lock, Trophy, AlertCircle, Bomb, Type, Palette, Layout, Grid, Check, Sparkles, Eye, Camera, MessageSquare, Heart, RefreshCw } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
 import AdminPanel from './src/Admin';
 import { useMenuData } from './src/useFirebaseMenu';
 import { useDrinksData, useShopData, useMarqueeData } from './src/useFirebaseData';
@@ -1578,6 +1579,7 @@ const App = () => {
         <div className="flex justify-center gap-10 mb-12"><Instagram size={22} className="opacity-40 hover:opacity-100 hover:text-[#FF3B30]" /></div>
         <p className="text-[9px] font-black opacity-20 tracking-[0.3em] uppercase">{t.footer.rights}</p>
       </footer>
+      <Analytics />
     </div>
   );
 };
