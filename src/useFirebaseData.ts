@@ -1,10 +1,71 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 
 type Lang = 'en' | 'ge';
 
-// Featured Drinks (Homepage)
+// Last Firestore snapshot is kept in localStorage so repeat visits render real
+// content (and start downloading real image URLs) before Firestore connects.
+const CACHE_PREFIX = 'yam-cache:';
+
+function readCache<T>(key: string): T | undefined {
+  try {
+    const raw = localStorage.getItem(CACHE_PREFIX + key);
+    return raw ? (JSON.parse(raw) as T) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function writeCache(key: string, value: unknown) {
+  try {
+    localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(value));
+  } catch {
+    // Storage full or disabled — the live listener still works.
+  }
+}
+
+// undefined = nothing known yet (first visit, still loading)
+function useCollection<T>(name: string): T[] | undefined {
+  const [docs, setDocs] = useState<T[] | undefined>(() => readCache<T[]>(name));
+
+  useEffect(() => {
+    return onSnapshot(
+      collection(db, name),
+      (snapshot) => {
+        const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as T);
+        writeCache(name, items);
+        setDocs(items);
+      },
+      () => setDocs((prev) => prev ?? [])
+    );
+  }, [name]);
+
+  return docs;
+}
+
+// undefined = still loading, null = document missing or unavailable
+function useDocument<T>(path: string, id: string): T | null | undefined {
+  const key = `${path}/${id}`;
+  const [data, setData] = useState<T | null | undefined>(() => readCache<T>(key));
+
+  useEffect(() => {
+    return onSnapshot(
+      doc(db, path, id),
+      (snap) => {
+        const value = snap.exists() ? (snap.data() as T) : null;
+        writeCache(key, value);
+        setData(value);
+      },
+      () => setData((prev) => prev ?? null)
+    );
+  }, [path, id, key]);
+
+  return data;
+}
+
+// ============ Featured Drinks (Homepage) ============
+
 interface DrinkItem {
   id: number;
   name: string;
@@ -18,11 +79,11 @@ interface FirebaseDrink {
   name_ge: string;
   note_en: string;
   note_ge: string;
-  img: string;
   order: number;
 }
 
-// Local images served by Vercel CDN — instant loading
+// Shown while loading on a first visit or if Firebase is down.
+// Photos are static files in /public (served by Vercel's CDN); Firebase only provides text.
 const FALLBACK_DRINKS: Record<Lang, DrinkItem[]> = {
   en: [
     { id: 1, name: 'YAM SPECIAL', note: 'Honey-infused cold brew & sea salt.', img: '/images/drinks/drink-1.jpg' },
@@ -33,10 +94,29 @@ const FALLBACK_DRINKS: Record<Lang, DrinkItem[]> = {
     { id: 1, name: 'YAM სპეშალი', note: 'თაფლიანი ქოლდ ბრიუ და ზღვის მარილი.', img: '/images/drinks/drink-1.jpg' },
     { id: 2, name: 'სილქი ფლეთ უაითი', note: 'მიკრო-ქაფი ორმაგ რისტრეტოზე.', img: '/images/drinks/drink-2.jpg' },
     { id: 3, name: 'ბეჩ ბრიუ', note: 'ეთიოპია, ყვავილოვანი და მსუბუქი.', img: '/images/drinks/drink-3.jpg' },
-  ]
+  ],
 };
 
-// Shop Items
+export function useDrinksData(lang: Lang) {
+  const docs = useCollection<FirebaseDrink>('drinks');
+
+  const drinks = useMemo<DrinkItem[]>(() => {
+    if (!docs || docs.length === 0) return FALLBACK_DRINKS[lang];
+    return [...docs]
+      .sort((a, b) => a.order - b.order)
+      .map((item, index) => ({
+        id: index + 1,
+        name: lang === 'en' ? item.name_en : item.name_ge,
+        note: lang === 'en' ? item.note_en : item.note_ge,
+        img: `/images/drinks/drink-${index + 1}.jpg`,
+      }));
+  }, [docs, lang]);
+
+  return { drinks, isLoading: docs === undefined };
+}
+
+// ============ Shop ============
+
 interface ShopItem {
   id: number;
   name: string;
@@ -54,146 +134,59 @@ interface FirebaseShopItem {
   color_en: string;
   color_ge: string;
   price: string;
-  img: string;
   desc_en: string;
   desc_ge: string;
   comingSoon: boolean;
   order: number;
 }
 
-// Local images served by Vercel CDN — instant loading
 const FALLBACK_SHOP: Record<Lang, ShopItem[]> = {
   en: [
-    { id: 101, name: "YAM ARCHIVE TEE", color: "BLAZE ORANGE", price: "₾45.00", img: "/images/shop/shop-101.jpg", desc: "Heavyweight cotton with puff print logo.", comingSoon: true },
-    { id: 102, name: "ABSTRACT NOIR", color: "MIDNIGHT BLACK", price: "₾50.00", img: "/images/shop/shop-102.jpg", desc: "Oversized fit. Back abstract tonal print.", comingSoon: true },
-    { id: 103, name: "YAM HOODIE", color: "VOID", price: "₾85.00", img: "/images/shop/shop-103.jpg", comingSoon: true },
-    { id: 104, name: "CANVAS TOTE", color: "RAW", price: "₾25.00", img: "/images/shop/shop-104.jpg", comingSoon: true }
+    { id: 101, name: 'YAM ARCHIVE TEE', color: 'BLAZE ORANGE', price: '₾45.00', img: '/images/shop/shop-101.jpg', desc: 'Heavyweight cotton with puff print logo.', comingSoon: true },
+    { id: 102, name: 'ABSTRACT NOIR', color: 'MIDNIGHT BLACK', price: '₾50.00', img: '/images/shop/shop-102.jpg', desc: 'Oversized fit. Back abstract tonal print.', comingSoon: true },
+    { id: 103, name: 'YAM HOODIE', color: 'VOID', price: '₾85.00', img: '/images/shop/shop-103.jpg', comingSoon: true },
+    { id: 104, name: 'CANVAS TOTE', color: 'RAW', price: '₾25.00', img: '/images/shop/shop-104.jpg', comingSoon: true },
   ],
   ge: [
-    { id: 101, name: "YAM არქივ TEE", color: "მკვეთრი ნარინჯისფერი", price: "₾45.00", img: "/images/shop/shop-101.jpg", desc: "მძიმე ბამბა, მოცულობითი ლოგო.", comingSoon: true },
-    { id: 102, name: "აბსტრაქტ ნუარი", color: "შუაღამის შავი", price: "₾50.00", img: "/images/shop/shop-102.jpg", desc: "ოვერსაიზ სტილი. აბსტრაქტული პრინტი ზურგზე.", comingSoon: true },
-    { id: 103, name: "YAM ჰუდი", color: "VOID", price: "₾85.00", img: "/images/shop/shop-103.jpg", comingSoon: true },
-    { id: 104, name: "ტილოს ჩანთა", color: "RAW", price: "₾25.00", img: "/images/shop/shop-104.jpg", comingSoon: true }
-  ]
+    { id: 101, name: 'YAM არქივ TEE', color: 'მკვეთრი ნარინჯისფერი', price: '₾45.00', img: '/images/shop/shop-101.jpg', desc: 'მძიმე ბამბა, მოცულობითი ლოგო.', comingSoon: true },
+    { id: 102, name: 'აბსტრაქტ ნუარი', color: 'შუაღამის შავი', price: '₾50.00', img: '/images/shop/shop-102.jpg', desc: 'ოვერსაიზ სტილი. აბსტრაქტული პრინტი ზურგზე.', comingSoon: true },
+    { id: 103, name: 'YAM ჰუდი', color: 'VOID', price: '₾85.00', img: '/images/shop/shop-103.jpg', comingSoon: true },
+    { id: 104, name: 'ტილოს ჩანთა', color: 'RAW', price: '₾25.00', img: '/images/shop/shop-104.jpg', comingSoon: true },
+  ],
 };
 
-// Hook to get featured drinks data with real-time updates.
-// Firebase provides text (names, notes); images always served locally via Vercel CDN.
-export function useDrinksData(lang: Lang) {
-  const [drinks, setDrinks] = useState<DrinkItem[]>(FALLBACK_DRINKS[lang]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [source, setSource] = useState<'firebase' | 'fallback'>('firebase');
-
-  useEffect(() => {
-    const unsubscribe = onSnapshot(
-      collection(db, 'drinks'),
-      (snapshot) => {
-        const items: FirebaseDrink[] = [];
-        snapshot.forEach((doc) => {
-          items.push({ id: doc.id, ...doc.data() } as FirebaseDrink);
-        });
-
-        if (items.length > 0) {
-          const fallback = FALLBACK_DRINKS[lang];
-          const converted = items
-            .sort((a, b) => a.order - b.order)
-            .map((item, index) => ({
-              id: index + 1,
-              name: lang === 'en' ? item.name_en : item.name_ge,
-              note: lang === 'en' ? item.note_en : item.note_ge,
-              img: fallback[index]?.img || `/images/drinks/drink-${index + 1}.jpg`,
-            }));
-          setDrinks(converted);
-          setSource('firebase');
-        } else {
-          setDrinks(FALLBACK_DRINKS[lang]);
-          setSource('fallback');
-        }
-        setIsLoading(false);
-      },
-      (error) => {
-        console.warn('Firebase unavailable for drinks, using fallback:', error);
-        setDrinks(FALLBACK_DRINKS[lang]);
-        setSource('fallback');
-        setIsLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [lang]);
-
-  return { drinks, isLoading, source };
-}
-
-// Hook to get shop data with real-time updates.
-// Firebase provides text (names, prices, etc.); images always served locally via Vercel CDN.
 export function useShopData(lang: Lang) {
-  const [items, setItems] = useState<ShopItem[]>(FALLBACK_SHOP[lang]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [source, setSource] = useState<'firebase' | 'fallback'>('firebase');
+  const docs = useCollection<FirebaseShopItem>('shop');
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(
-      collection(db, 'shop'),
-      (snapshot) => {
-        const shopItems: FirebaseShopItem[] = [];
-        snapshot.forEach((doc) => {
-          shopItems.push({ id: doc.id, ...doc.data() } as FirebaseShopItem);
-        });
+  const items = useMemo<ShopItem[]>(() => {
+    if (!docs || docs.length === 0) return FALLBACK_SHOP[lang];
+    return [...docs]
+      .sort((a, b) => a.order - b.order)
+      .map((item, index) => ({
+        id: 100 + index + 1,
+        name: lang === 'en' ? item.name_en : item.name_ge,
+        color: lang === 'en' ? item.color_en : item.color_ge,
+        price: item.price,
+        img: `/images/shop/shop-${100 + index + 1}.jpg`,
+        desc: lang === 'en' ? item.desc_en : item.desc_ge,
+        comingSoon: item.comingSoon,
+      }));
+  }, [docs, lang]);
 
-        if (shopItems.length > 0) {
-          const fallback = FALLBACK_SHOP[lang];
-          const converted = shopItems
-            .sort((a, b) => a.order - b.order)
-            .map((item, index) => ({
-              id: 100 + index + 1,
-              name: lang === 'en' ? item.name_en : item.name_ge,
-              color: lang === 'en' ? item.color_en : item.color_ge,
-              price: item.price,
-              img: fallback[index]?.img || `/images/shop/shop-${100 + index + 1}.jpg`,
-              desc: lang === 'en' ? item.desc_en : item.desc_ge,
-              comingSoon: item.comingSoon,
-            }));
-          setItems(converted);
-          setSource('firebase');
-        } else {
-          setItems(FALLBACK_SHOP[lang]);
-          setSource('fallback');
-        }
-        setIsLoading(false);
-      },
-      (error) => {
-        console.warn('Firebase unavailable for shop, using fallback:', error);
-        setItems(FALLBACK_SHOP[lang]);
-        setSource('fallback');
-        setIsLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [lang]);
-
-  return { items, isLoading, source };
+  return { items, isLoading: docs === undefined };
 }
 
-// Marquee Items
+// ============ Marquee ============
+
 interface MarqueeItem {
   text: string;
   style: 'bold' | 'italic';
 }
 
-interface FirebaseMarqueeItem {
-  text_en: string;
-  text_ge: string;
-  style: 'bold' | 'italic';
-  order: number;
-}
-
 interface FirebaseMarqueeContent {
-  items: FirebaseMarqueeItem[];
+  items?: { text_en: string; text_ge: string; style: 'bold' | 'italic'; order: number }[];
 }
 
-// Fallback marquee items
 const FALLBACK_MARQUEE: Record<Lang, MarqueeItem[]> = {
   en: [
     { text: 'ORGANIC SOIL', style: 'bold' },
@@ -218,53 +211,74 @@ const FALLBACK_MARQUEE: Record<Lang, MarqueeItem[]> = {
     { text: 'მხოლოდ კარგი მარცვალი', style: 'italic' },
     { text: '2026 წლიდან', style: 'bold' },
     { text: 'იგრძენი ვაიბი', style: 'italic' },
-  ]
+  ],
 };
 
-// Hook to get marquee data with real-time updates
 export function useMarqueeData(lang: Lang) {
-  const [items, setItems] = useState<MarqueeItem[]>(FALLBACK_MARQUEE[lang]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [source, setSource] = useState<'firebase' | 'fallback'>('fallback');
+  const data = useDocument<FirebaseMarqueeContent>('content', 'marquee');
 
-  useEffect(() => {
-    // Real-time listener for marquee content document
-    const unsubscribe = onSnapshot(
-      doc(db, 'content', 'marquee'),
-      (docSnap) => {
-        if (docSnap.exists()) {
-          const marqueeData = docSnap.data() as FirebaseMarqueeContent;
-          if (marqueeData.items && marqueeData.items.length > 0) {
-            const converted = marqueeData.items
-              .sort((a, b) => a.order - b.order)
-              .map((item) => ({
-                text: lang === 'en' ? item.text_en : item.text_ge,
-                style: item.style,
-              }));
-            setItems(converted);
-            setSource('firebase');
-          } else {
-            setItems(FALLBACK_MARQUEE[lang]);
-            setSource('fallback');
-          }
-        } else {
-          setItems(FALLBACK_MARQUEE[lang]);
-          setSource('fallback');
-        }
-        setIsLoading(false);
-      },
-      (error) => {
-        console.warn('Firebase unavailable for marquee, using fallback:', error);
-        setItems(FALLBACK_MARQUEE[lang]);
-        setSource('fallback');
-        setIsLoading(false);
-      }
-    );
+  const items = useMemo<MarqueeItem[]>(() => {
+    if (!data?.items || data.items.length === 0) return FALLBACK_MARQUEE[lang];
+    return [...data.items]
+      .sort((a, b) => a.order - b.order)
+      .map((item) => ({ text: lang === 'en' ? item.text_en : item.text_ge, style: item.style }));
+  }, [data, lang]);
 
-    return () => unsubscribe();
-  }, [lang]);
-
-  return { items, isLoading, source };
+  return { items, isLoading: data === undefined };
 }
 
-export { FALLBACK_DRINKS, FALLBACK_SHOP, FALLBACK_MARQUEE };
+// ============ Brand ============
+
+interface FirebaseBrandContent {
+  title1_en: string;
+  title1_ge: string;
+  title_accent_en: string;
+  title_accent_ge: string;
+  desc_en: string;
+  desc_ge: string;
+  stat1: string;
+  stat1_label_en: string;
+  stat1_label_ge: string;
+  stat2: string;
+  stat2_label_en: string;
+  stat2_label_ge: string;
+  feature1_title_en: string;
+  feature1_title_ge: string;
+  feature1_text_en: string;
+  feature1_text_ge: string;
+  feature2_title_en: string;
+  feature2_title_ge: string;
+  feature2_text_en: string;
+  feature2_text_ge: string;
+  feature3_title_en: string;
+  feature3_title_ge: string;
+  feature3_text_en: string;
+  feature3_text_ge: string;
+}
+
+// Empty fields mean "use the built-in text" — BrandPage falls back to CONTENT.
+export function useBrandContent(lang: Lang) {
+  const data = useDocument<FirebaseBrandContent>('content', 'brand');
+
+  return useMemo(() => {
+    const en = lang === 'en';
+    if (!data) {
+      return { title1: '', titleAccent: '', desc: '', stat1: '', stat1Label: '', stat2: '', stat2Label: '', features: [] as { title: string; text: string }[], isLoading: data === undefined };
+    }
+    return {
+      title1: en ? data.title1_en : data.title1_ge,
+      titleAccent: en ? data.title_accent_en : data.title_accent_ge,
+      desc: en ? data.desc_en : data.desc_ge,
+      stat1: data.stat1,
+      stat1Label: en ? data.stat1_label_en : data.stat1_label_ge,
+      stat2: data.stat2,
+      stat2Label: en ? data.stat2_label_en : data.stat2_label_ge,
+      features: [
+        { title: en ? data.feature1_title_en : data.feature1_title_ge, text: en ? data.feature1_text_en : data.feature1_text_ge },
+        { title: en ? data.feature2_title_en : data.feature2_title_ge, text: en ? data.feature2_text_en : data.feature2_text_ge },
+        { title: en ? data.feature3_title_en : data.feature3_title_ge, text: en ? data.feature3_text_en : data.feature3_text_ge },
+      ],
+      isLoading: false,
+    };
+  }, [data, lang]);
+}

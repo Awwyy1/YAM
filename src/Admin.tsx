@@ -426,6 +426,27 @@ const THEME = {
   },
 };
 
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
+const MAX_IMAGE_SIDE = 1600;
+
+// Resize to at most 1600px and re-encode as WebP: a 1.5–2 MB PNG becomes ~150 KB.
+async function optimizeImage(file: File): Promise<Blob> {
+  if (file.type === 'image/svg+xml' || file.type === 'image/gif') return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_IMAGE_SIDE / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', 0.82));
+    return blob && blob.type === 'image/webp' && blob.size < file.size ? blob : file;
+  } catch {
+    return file;
+  }
+}
+
 // Image upload component
 const ImageUpload: React.FC<{
   currentUrl: string;
@@ -440,11 +461,24 @@ const ImageUpload: React.FC<{
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Please choose an image file');
+      return;
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      alert('Image is too large (max 25 MB)');
+      return;
+    }
 
     setUploading(true);
     try {
+      const optimized = await optimizeImage(file);
       const storageRef = ref(storage, `${folder}/${id}_${Date.now()}`);
-      await uploadBytes(storageRef, file);
+      // File names are unique per upload, so browsers may cache them forever.
+      await uploadBytes(storageRef, optimized, {
+        contentType: optimized.type,
+        cacheControl: 'public, max-age=31536000, immutable',
+      });
       const url = await getDownloadURL(storageRef);
       onUpload(url);
     } catch (error) {

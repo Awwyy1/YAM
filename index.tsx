@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import './index.css';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, X, Instagram, Sun, Moon, Leaf, Coffee, Globe, ArrowUpRight, MapPin, Clock, Trash2, Gamepad2, Share2, Lock, Trophy, AlertCircle, Bomb, Type, Palette, Layout, Grid, Check, Sparkles, Eye, Camera, MessageSquare, Heart, RefreshCw } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
-import AdminPanel from './src/Admin';
 import { useMenuData } from './src/useFirebaseMenu';
-import { useDrinksData, useShopData, useMarqueeData } from './src/useFirebaseData';
-import { useBrandContent } from './src/useFirebaseContent';
+import { useDrinksData, useShopData, useMarqueeData, useBrandContent } from './src/useFirebaseData';
+
+const AdminPanel = lazy(() => import('./src/Admin'));
 
 // GTM DataLayer integration
 declare global {
@@ -513,19 +514,6 @@ const EXTRA_MENU_DATA = {
     ]
 };
 
-const BEANS_products = {
-  en: [
-    { id: 1, name: 'YAM SPECIAL', note: 'Honey-infused cold brew & sea salt.', img: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&q=80' },
-    { id: 2, name: 'SILKY FLAT WHITE', note: 'Micro-foam over double ristretto.', img: 'https://images.unsplash.com/photo-1534778101976-62847782c213?w=800&q=80' },
-    { id: 3, name: 'BATCH BREW', note: 'Ethiopia, floral & light body.', img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80' },
-  ],
-  ge: [
-    { id: 1, name: 'YAM სპეშალი', note: 'თაფლიანი ქოლდ ბრიუ და ზღვის მარილი.', img: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&q=80' },
-    { id: 2, name: 'სილქი ფლეთ უაითი', note: 'მიკრო-ქაფი ორმაგ რისტრეტოზე.', img: 'https://images.unsplash.com/photo-1534778101976-62847782c213?w=800&q=80' },
-    { id: 3, name: 'ბეჩ ბრიუ', note: 'ეთიოპია, ყვავილოვანი და მსუბუქი.', img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80' },
-  ]
-};
-
 const FULL_MENU_CATEGORIES = {
   en: [
     {
@@ -561,21 +549,6 @@ const FULL_MENU_CATEGORIES = {
         ]
     }
   ]
-};
-
-const MERCH_ITEMS = {
-    en: [
-        { id: 101, name: "YAM ARCHIVE TEE", color: "BLAZE ORANGE", price: "₾45.00", img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80", desc: "Heavyweight cotton with puff print logo.", comingSoon: true },
-        { id: 102, name: "ABSTRACT NOIR", color: "MIDNIGHT BLACK", price: "₾50.00", img: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&q=80", desc: "Oversized fit. Back abstract tonal print.", comingSoon: true },
-        { id: 103, name: "YAM HOODIE", color: "VOID", price: "₾85.00", img: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80", comingSoon: true },
-        { id: 104, name: "CANVAS TOTE", color: "RAW", price: "₾25.00", img: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&q=80", comingSoon: true }
-    ],
-    ge: [
-        { id: 101, name: "YAM არქივ TEE", color: "მკვეთრი ნარინჯისფერი", price: "₾45.00", img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80", desc: "მძიმე ბამბა, მოცულობითი ლოგო.", comingSoon: true },
-        { id: 102, name: "აბსტრაქტ ნუარი", color: "შუაღამის შავი", price: "₾50.00", img: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&q=80", desc: "ოვერსაიზ სტილი. აბსტრაქტული პრინტი ზურგზე.", comingSoon: true },
-        { id: 103, name: "YAM ჰუდი", color: "VOID", price: "₾85.00", img: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80", comingSoon: true },
-        { id: 104, name: "ტილოს ჩანთა", color: "RAW", price: "₾25.00", img: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&q=80", comingSoon: true }
-    ]
 };
 
 interface Product {
@@ -635,8 +608,8 @@ const BrandPage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) 
             <div><p className="text-4xl font-black mb-1">{stat2}</p><p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">{stat2Label}</p></div>
           </div>
         </motion.div>
-        <div className="rounded-[40px] overflow-hidden aspect-[4/5] shadow-xl">
-          <img src={brandImageUrl} className="w-full h-full object-cover" alt="Brand" />
+        <div className="rounded-[40px] overflow-hidden aspect-[4/5] shadow-xl bg-zinc-200 dark:bg-zinc-800">
+          <img src={brandImageUrl} className="w-full h-full object-cover" alt="YAM Coffee" />
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -704,14 +677,14 @@ const ShopPage: React.FC<{ isDark: boolean; addToCart: (item: Product) => void; 
                             <div className="relative aspect-[3/4] mb-6 overflow-hidden bg-zinc-100 dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800">
                                 {item.comingSoon ? (
                                     <>
-                                        <img src={item.img} alt={item.name} className="w-full h-full object-cover filter blur-xl opacity-50 scale-110" />
+                                        {item.img && <img src={item.img} alt={item.name} loading="lazy" className="w-full h-full object-cover filter blur-xl opacity-50 scale-110" />}
                                         <div className="absolute inset-0 flex items-center justify-center z-10">
                                             <span className="text-2xl font-black uppercase tracking-tighter text-center leading-none transform -rotate-12 border-4 border-current px-4 py-2 opacity-50">Reveal<br/>Soon</span>
                                         </div>
                                     </>
                                 ) : (
                                     <>
-                                        <motion.img whileHover={{ scale: 1.05 }} transition={{ duration: 0.5 }} src={item.img} alt={item.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
+                                        {item.img && <motion.img whileHover={{ scale: 1.05 }} transition={{ duration: 0.5 }} src={item.img} alt={item.name} loading="lazy" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />}
                                         <div className="absolute inset-x-4 bottom-4">
                                             <button onClick={(e) => { e.stopPropagation(); addToCart(item); trackEvent('add_to_cart', { item_name: item.name, item_price: item.price }); }} className="w-full py-4 bg-[#FF3B30] text-white font-black uppercase tracking-widest text-xs opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-xl">{t.add_to_cart}</button>
                                         </div>
@@ -1369,6 +1342,43 @@ const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void; items: Produc
     );
 };
 
+const KNOWN_PATHS = ['/', '/brand', '/menu', '/shop', '/game', '/oracle', '/book'];
+
+const NotFoundPage: React.FC<{ lang: Lang }> = ({ lang }) => {
+  const navigate = useNavigate();
+  return (
+    <motion.div key="not-found" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-[70vh] pt-44 pb-20 px-6 flex flex-col items-center justify-center text-center">
+      <p className="text-[#FF3B30] font-black tracking-widest text-sm uppercase mb-4">404</p>
+      <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-none uppercase mb-10">{lang === 'en' ? 'Page not found' : 'გვერდი ვერ მოიძებნა'}</h1>
+      <button onClick={() => navigate('/')} className="px-8 py-4 bg-[#FF3B30] text-white font-black uppercase tracking-widest text-xs rounded-full">{lang === 'en' ? 'Back home' : 'მთავარზე'}</button>
+    </motion.div>
+  );
+};
+
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  declare props: { children: React.ReactNode };
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.error(error);
+  }
+
+  render() {
+    if (!this.state.hasError) return this.props.children;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-center px-6" style={{ backgroundColor: COLORS.light.base, color: COLORS.light.text }}>
+        <p className="text-xl font-black tracking-tighter uppercase mb-6"><span className="text-[#FF3B30]">YAM</span> COFFEE</p>
+        <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase mb-10">Something went wrong</h1>
+        <button onClick={() => window.location.assign('/')} className="px-8 py-4 bg-[#FF3B30] text-white font-black uppercase tracking-widest text-xs rounded-full">Reload</button>
+      </div>
+    );
+  }
+}
+
 const App = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -1387,7 +1397,7 @@ const App = () => {
 
   // Admin page - render without nav/footer
   if (location.pathname === '/admin') {
-    return <AdminPanel />;
+    return <Suspense fallback={null}><AdminPanel /></Suspense>;
   }
 
   return (
@@ -1512,14 +1522,17 @@ const App = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                        {featuredDrinks.map((bean) => (
                           <div key={bean.id} className="group cursor-pointer">
-                             <div className="aspect-[3/4] rounded-[30px] overflow-hidden mb-6 relative">
+                             <div className="aspect-[3/4] rounded-[30px] overflow-hidden mb-6 relative bg-zinc-200 dark:bg-zinc-800">
                                 <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors z-10"></div>
-                                <motion.img 
-                                   whileHover={{ scale: 1.1 }}
-                                   transition={{ duration: 0.6 }}
-                                   src={bean.img} 
-                                   className="w-full h-full object-cover"
-                                />
+                                {bean.img && (
+                                   <motion.img
+                                      whileHover={{ scale: 1.1 }}
+                                      transition={{ duration: 0.6 }}
+                                      src={bean.img}
+                                      alt={bean.name}
+                                      className="w-full h-full object-cover"
+                                   />
+                                )}
                              </div>
                              <h4 className="text-2xl font-black uppercase mb-1">{bean.name}</h4>
                              <p className="opacity-50 text-sm font-medium tracking-wide uppercase">{bean.note}</p>
@@ -1572,6 +1585,7 @@ const App = () => {
           {location.pathname === '/game' && <GamePage isDark={isDark} lang={lang} />}
           {location.pathname === '/oracle' && <OraclePage isDark={isDark} lang={lang} />}
           {location.pathname === '/book' && <LogoPage isDark={isDark} lang={lang} />}
+          {!KNOWN_PATHS.includes(location.pathname) && <NotFoundPage lang={lang} />}
         </AnimatePresence>
       </main>
       <footer className="border-t border-black/5 dark:border-white/5 py-24 px-6 md:px-12 text-center">
@@ -1585,4 +1599,4 @@ const App = () => {
 };
 
 const root = createRoot(document.getElementById('root')!);
-root.render(<BrowserRouter><App /></BrowserRouter>);
+root.render(<ErrorBoundary><BrowserRouter><App /></BrowserRouter></ErrorBoundary>);
