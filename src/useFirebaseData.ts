@@ -79,21 +79,21 @@ interface FirebaseDrink {
   name_ge: string;
   note_en: string;
   note_ge: string;
-  img: string;
   order: number;
 }
 
-// Text-only fallback: shown while loading on a first visit or if Firebase is down.
+// Shown while loading on a first visit or if Firebase is down.
+// Photos are static files in /public (served by Vercel's CDN); Firebase only provides text.
 const FALLBACK_DRINKS: Record<Lang, DrinkItem[]> = {
   en: [
-    { id: 1, name: 'YAM SPECIAL', note: 'Honey-infused cold brew & sea salt.', img: '' },
-    { id: 2, name: 'SILKY FLAT WHITE', note: 'Micro-foam over double ristretto.', img: '' },
-    { id: 3, name: 'BATCH BREW', note: 'Ethiopia, floral & light body.', img: '' },
+    { id: 1, name: 'YAM SPECIAL', note: 'Honey-infused cold brew & sea salt.', img: '/images/drinks/drink-1.jpg' },
+    { id: 2, name: 'SILKY FLAT WHITE', note: 'Micro-foam over double ristretto.', img: '/images/drinks/drink-2.jpg' },
+    { id: 3, name: 'BATCH BREW', note: 'Ethiopia, floral & light body.', img: '/images/drinks/drink-3.jpg' },
   ],
   ge: [
-    { id: 1, name: 'YAM სპეშალი', note: 'თაფლიანი ქოლდ ბრიუ და ზღვის მარილი.', img: '' },
-    { id: 2, name: 'სილქი ფლეთ უაითი', note: 'მიკრო-ქაფი ორმაგ რისტრეტოზე.', img: '' },
-    { id: 3, name: 'ბეჩ ბრიუ', note: 'ეთიოპია, ყვავილოვანი და მსუბუქი.', img: '' },
+    { id: 1, name: 'YAM სპეშალი', note: 'თაფლიანი ქოლდ ბრიუ და ზღვის მარილი.', img: '/images/drinks/drink-1.jpg' },
+    { id: 2, name: 'სილქი ფლეთ უაითი', note: 'მიკრო-ქაფი ორმაგ რისტრეტოზე.', img: '/images/drinks/drink-2.jpg' },
+    { id: 3, name: 'ბეჩ ბრიუ', note: 'ეთიოპია, ყვავილოვანი და მსუბუქი.', img: '/images/drinks/drink-3.jpg' },
   ],
 };
 
@@ -108,7 +108,7 @@ export function useDrinksData(lang: Lang) {
         id: index + 1,
         name: lang === 'en' ? item.name_en : item.name_ge,
         note: lang === 'en' ? item.note_en : item.note_ge,
-        img: item.img || '',
+        img: `/images/drinks/drink-${index + 1}.jpg`,
       }));
   }, [docs, lang]);
 
@@ -134,7 +134,6 @@ interface FirebaseShopItem {
   color_en: string;
   color_ge: string;
   price: string;
-  img: string;
   desc_en: string;
   desc_ge: string;
   comingSoon: boolean;
@@ -143,16 +142,16 @@ interface FirebaseShopItem {
 
 const FALLBACK_SHOP: Record<Lang, ShopItem[]> = {
   en: [
-    { id: 101, name: 'YAM ARCHIVE TEE', color: 'BLAZE ORANGE', price: '₾45.00', img: '', desc: 'Heavyweight cotton with puff print logo.', comingSoon: true },
-    { id: 102, name: 'ABSTRACT NOIR', color: 'MIDNIGHT BLACK', price: '₾50.00', img: '', desc: 'Oversized fit. Back abstract tonal print.', comingSoon: true },
-    { id: 103, name: 'YAM HOODIE', color: 'VOID', price: '₾85.00', img: '', comingSoon: true },
-    { id: 104, name: 'CANVAS TOTE', color: 'RAW', price: '₾25.00', img: '', comingSoon: true },
+    { id: 101, name: 'YAM ARCHIVE TEE', color: 'BLAZE ORANGE', price: '₾45.00', img: '/images/shop/shop-101.jpg', desc: 'Heavyweight cotton with puff print logo.', comingSoon: true },
+    { id: 102, name: 'ABSTRACT NOIR', color: 'MIDNIGHT BLACK', price: '₾50.00', img: '/images/shop/shop-102.jpg', desc: 'Oversized fit. Back abstract tonal print.', comingSoon: true },
+    { id: 103, name: 'YAM HOODIE', color: 'VOID', price: '₾85.00', img: '/images/shop/shop-103.jpg', comingSoon: true },
+    { id: 104, name: 'CANVAS TOTE', color: 'RAW', price: '₾25.00', img: '/images/shop/shop-104.jpg', comingSoon: true },
   ],
   ge: [
-    { id: 101, name: 'YAM არქივ TEE', color: 'მკვეთრი ნარინჯისფერი', price: '₾45.00', img: '', desc: 'მძიმე ბამბა, მოცულობითი ლოგო.', comingSoon: true },
-    { id: 102, name: 'აბსტრაქტ ნუარი', color: 'შუაღამის შავი', price: '₾50.00', img: '', desc: 'ოვერსაიზ სტილი. აბსტრაქტული პრინტი ზურგზე.', comingSoon: true },
-    { id: 103, name: 'YAM ჰუდი', color: 'VOID', price: '₾85.00', img: '', comingSoon: true },
-    { id: 104, name: 'ტილოს ჩანთა', color: 'RAW', price: '₾25.00', img: '', comingSoon: true },
+    { id: 101, name: 'YAM არქივ TEE', color: 'მკვეთრი ნარინჯისფერი', price: '₾45.00', img: '/images/shop/shop-101.jpg', desc: 'მძიმე ბამბა, მოცულობითი ლოგო.', comingSoon: true },
+    { id: 102, name: 'აბსტრაქტ ნუარი', color: 'შუაღამის შავი', price: '₾50.00', img: '/images/shop/shop-102.jpg', desc: 'ოვერსაიზ სტილი. აბსტრაქტული პრინტი ზურგზე.', comingSoon: true },
+    { id: 103, name: 'YAM ჰუდი', color: 'VOID', price: '₾85.00', img: '/images/shop/shop-103.jpg', comingSoon: true },
+    { id: 104, name: 'ტილოს ჩანთა', color: 'RAW', price: '₾25.00', img: '/images/shop/shop-104.jpg', comingSoon: true },
   ],
 };
 
@@ -168,7 +167,7 @@ export function useShopData(lang: Lang) {
         name: lang === 'en' ? item.name_en : item.name_ge,
         color: lang === 'en' ? item.color_en : item.color_ge,
         price: item.price,
-        img: item.img || '',
+        img: `/images/shop/shop-${100 + index + 1}.jpg`,
         desc: lang === 'en' ? item.desc_en : item.desc_ge,
         comingSoon: item.comingSoon,
       }));
@@ -237,7 +236,6 @@ interface FirebaseBrandContent {
   title_accent_ge: string;
   desc_en: string;
   desc_ge: string;
-  image_url?: string;
   stat1: string;
   stat1_label_en: string;
   stat1_label_ge: string;
@@ -265,13 +263,12 @@ export function useBrandContent(lang: Lang) {
   return useMemo(() => {
     const en = lang === 'en';
     if (!data) {
-      return { title1: '', titleAccent: '', desc: '', imageUrl: '', stat1: '', stat1Label: '', stat2: '', stat2Label: '', features: [] as { title: string; text: string }[], isLoading: data === undefined };
+      return { title1: '', titleAccent: '', desc: '', stat1: '', stat1Label: '', stat2: '', stat2Label: '', features: [] as { title: string; text: string }[], isLoading: data === undefined };
     }
     return {
       title1: en ? data.title1_en : data.title1_ge,
       titleAccent: en ? data.title_accent_en : data.title_accent_ge,
       desc: en ? data.desc_en : data.desc_ge,
-      imageUrl: data.image_url || '',
       stat1: data.stat1,
       stat1Label: en ? data.stat1_label_en : data.stat1_label_ge,
       stat2: data.stat2,

@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, X, Instagram, Sun, Moon, Leaf, Coffee, Globe, ArrowUpRight, MapPin, Clock, Trash2, Gamepad2, Share2, Lock, Trophy, AlertCircle, Bomb, Type, Palette, Layout, Grid, Check, Sparkles, Eye, Camera, MessageSquare, Heart, RefreshCw } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
 import { useMenuData } from './src/useFirebaseMenu';
 import { useDrinksData, useShopData, useMarqueeData, useBrandContent } from './src/useFirebaseData';
 
@@ -107,7 +108,7 @@ const CONTENT = {
             manifesto_label: "",
             title_1: "HEY, IT'S",
             title_accent: "YAM.",
-            desc: "We opened in 2026 because we wanted a spot to hang out ourselves. Turns out, other people wanted that too. Now we make coffee and try not to overthink it.",
+            desc: "We decided to try and create one more spot where we’d love to hang out ourselves. Turns out, other people wanted that too. Now we make coffee and try not to overthink it.",
             stat1: "2026",
             stat1_label: "BORN",
             stat2: "BATUMI",
@@ -513,19 +514,6 @@ const EXTRA_MENU_DATA = {
     ]
 };
 
-const BEANS_products = {
-  en: [
-    { id: 1, name: 'YAM SPECIAL', note: 'Honey-infused cold brew & sea salt.', img: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&q=80' },
-    { id: 2, name: 'SILKY FLAT WHITE', note: 'Micro-foam over double ristretto.', img: 'https://images.unsplash.com/photo-1534778101976-62847782c213?w=800&q=80' },
-    { id: 3, name: 'BATCH BREW', note: 'Ethiopia, floral & light body.', img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80' },
-  ],
-  ge: [
-    { id: 1, name: 'YAM სპეშალი', note: 'თაფლიანი ქოლდ ბრიუ და ზღვის მარილი.', img: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&q=80' },
-    { id: 2, name: 'სილქი ფლეთ უაითი', note: 'მიკრო-ქაფი ორმაგ რისტრეტოზე.', img: 'https://images.unsplash.com/photo-1534778101976-62847782c213?w=800&q=80' },
-    { id: 3, name: 'ბეჩ ბრიუ', note: 'ეთიოპია, ყვავილოვანი და მსუბუქი.', img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80' },
-  ]
-};
-
 const FULL_MENU_CATEGORIES = {
   en: [
     {
@@ -561,21 +549,6 @@ const FULL_MENU_CATEGORIES = {
         ]
     }
   ]
-};
-
-const MERCH_ITEMS = {
-    en: [
-        { id: 101, name: "YAM ARCHIVE TEE", color: "BLAZE ORANGE", price: "₾45.00", img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80", desc: "Heavyweight cotton with puff print logo.", comingSoon: true },
-        { id: 102, name: "ABSTRACT NOIR", color: "MIDNIGHT BLACK", price: "₾50.00", img: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&q=80", desc: "Oversized fit. Back abstract tonal print.", comingSoon: true },
-        { id: 103, name: "YAM HOODIE", color: "VOID", price: "₾85.00", img: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80", comingSoon: true },
-        { id: 104, name: "CANVAS TOTE", color: "RAW", price: "₾25.00", img: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&q=80", comingSoon: true }
-    ],
-    ge: [
-        { id: 101, name: "YAM არქივ TEE", color: "მკვეთრი ნარინჯისფერი", price: "₾45.00", img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80", desc: "მძიმე ბამბა, მოცულობითი ლოგო.", comingSoon: true },
-        { id: 102, name: "აბსტრაქტ ნუარი", color: "შუაღამის შავი", price: "₾50.00", img: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&q=80", desc: "ოვერსაიზ სტილი. აბსტრაქტული პრინტი ზურგზე.", comingSoon: true },
-        { id: 103, name: "YAM ჰუდი", color: "VOID", price: "₾85.00", img: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80", comingSoon: true },
-        { id: 104, name: "ტილოს ჩანთა", color: "RAW", price: "₾25.00", img: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&q=80", comingSoon: true }
-    ]
 };
 
 interface Product {
@@ -621,7 +594,7 @@ const BrandPage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) 
   const stat2 = brandContent.stat2 || t.stat2;
   const stat2Label = brandContent.stat2Label || t.stat2_label;
   const features = brandContent.features.length > 0 ? brandContent.features : t.features;
-  const brandImageUrl = brandContent.imageUrl;
+  const brandImageUrl = "/images/brand/brand-1.jpg";
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-40 pb-20 px-6 md:px-12 max-w-7xl mx-auto">
@@ -636,7 +609,7 @@ const BrandPage: React.FC<{ isDark: boolean; lang: Lang }> = ({ isDark, lang }) 
           </div>
         </motion.div>
         <div className="rounded-[40px] overflow-hidden aspect-[4/5] shadow-xl bg-zinc-200 dark:bg-zinc-800">
-          {brandImageUrl && <img src={brandImageUrl} className="w-full h-full object-cover" alt="YAM Coffee" />}
+          <img src={brandImageUrl} className="w-full h-full object-cover" alt="YAM Coffee" />
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -1620,6 +1593,7 @@ const App = () => {
         <div className="flex justify-center gap-10 mb-12"><Instagram size={22} className="opacity-40 hover:opacity-100 hover:text-[#FF3B30]" /></div>
         <p className="text-[9px] font-black opacity-20 tracking-[0.3em] uppercase">{t.footer.rights}</p>
       </footer>
+      <Analytics />
     </div>
   );
 };
